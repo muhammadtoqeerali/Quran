@@ -18,17 +18,25 @@ export function TopHeader() {
           </span>
           {topHeaderConfig.countries.map((country) => (
             <a
-              key={country.country}
-              href={`https://wa.me/${country.whatsapp.replace(/\+/g, '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-sm hover:text-amber-400 transition-colors"
-              title={`WhatsApp ${country.country}`}
+             key={country.country}
+             href={`https://wa.me/${country.whatsapp.replace(/\+/g, '')}`}
+             target="_blank"
+             rel="noopener noreferrer"
+             className="flex items-center gap-2 text-sm hover:text-amber-400 transition-colors"
+             title={`WhatsApp ${country.country}`}
             >
-              <span className="text-lg">{country.flag}</span>
-              <span className="font-medium">{country.whatsapp}</span>
+             {/* display flag larger with an accessible label */}
+             <span
+             role="img"
+             aria-label={`${country.country} flag`}
+             className="text-2xl mr-1"
+            >
+             {country.flag}
+             </span>
+             <span className="font-medium">{country.whatsapp}</span>
             </a>
           ))}
+      
         </div>
 
         {/* Social Links */}
