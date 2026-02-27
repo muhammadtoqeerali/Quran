@@ -849,6 +849,22 @@ export const qiblaFinderConfig: QiblaFinderConfig = {
   scriptText: "Qibla Direction",
   subtitle: "FIND YOUR PRAYER DIRECTION",
   mainTitle: "Qibla Finder",
+  description: "Open the live camera and get an on-screen Qibla direction overlay based on your current location and device heading.",
+  kaabaCoords: { lat: 21.4224779, lng: 39.8251832 },
+  instructions: [
+    "Tap Start Camera Qibla View and allow location, camera, and motion permissions",
+    "Hold your phone upright and slowly rotate until the arrow points straight ahead",
+    "When aligned, the direction in front of you is Qibla",
+    "Use the live heading and bearing details for extra accuracy",
+  ],
+};
+// -----------------------------------------------------------------------------  instructions: string[];
+}
+
+export const qiblaFinderConfig: QiblaFinderConfig = {
+  scriptText: "Qibla Direction",
+  subtitle: "FIND YOUR PRAYER DIRECTION",
+  mainTitle: "Qibla Finder",
   description: "Use our Qibla finder to determine the exact direction of the Kaaba from your current location. Simply allow location access or enter your coordinates manually.",
   kaabaCoords: { lat: 21.4224779, lng: 39.8251832 },
   instructions: [
@@ -1108,4 +1124,5 @@ export interface ScrollToTopConfig {
 export const scrollToTopConfig: ScrollToTopConfig = {
   ariaLabel: "Back to top",
 };
+
 
