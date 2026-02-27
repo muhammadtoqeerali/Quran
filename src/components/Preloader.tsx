@@ -1,28 +1,6 @@
 import { useState, useEffect } from 'react';
 import { preloaderConfig } from '../config';
 
-// Custom Quran Icon
-function QuranIcon({ className }: { className?: string }) {
-  return (
-    <svg 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="1.5" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-      <line x1="8" y1="6" x2="16" y2="6" />
-      <line x1="8" y1="10" x2="16" y2="10" />
-      <line x1="8" y1="14" x2="14" y2="14" />
-      <path d="M12 17l2 2-2 2" />
-    </svg>
-  );
-}
-
 export function Preloader({ onComplete }: { onComplete: () => void }) {
   // Null check: if config is empty, complete immediately
   if (!preloaderConfig.brandName) {
@@ -47,10 +25,14 @@ export function Preloader({ onComplete }: { onComplete: () => void }) {
         phase === 'fading' ? 'opacity-0' : 'opacity-100'
       }`}
     >
-      {/* Logo Icon */}
+      {/* Logo */}
       <div className="preloader-text mb-6">
-        <div className="w-16 h-16 rounded-xl bg-white/10 flex items-center justify-center">
-          <QuranIcon className="w-10 h-10 text-amber-400" />
+        <div className="w-24 h-24 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center">
+          <img 
+            src={preloaderConfig.logo} 
+            alt="Quran Academy Logo" 
+            className="w-20 h-20 object-contain"
+          />
         </div>
       </div>
 

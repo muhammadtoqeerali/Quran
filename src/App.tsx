@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { TopHeader } from './sections/TopHeader';
 import { Navigation } from './sections/Navigation';
 import { Hero } from './sections/Hero';
 import { Features } from './sections/Features';
@@ -6,6 +7,8 @@ import { WineShowcase } from './sections/WineShowcase';
 import { HowItWorks } from './sections/HowItWorks';
 import { WineryCarousel } from './sections/WineryCarousel';
 import { Pricing } from './sections/Pricing';
+import { QiblaFinder } from './sections/QiblaFinder';
+import { QuranPlayer } from './sections/QuranPlayer';
 import { Museum } from './sections/Museum';
 import { News } from './sections/News';
 import { ContactForm } from './sections/ContactForm';
@@ -25,6 +28,7 @@ function App() {
       {isLoading && <Preloader onComplete={handlePreloaderComplete} />}
 
       <div className={`min-h-screen bg-white ${isLoading ? 'overflow-hidden max-h-screen' : ''}`}>
+        <TopHeader />
         <Navigation />
 
         <main>
@@ -34,6 +38,8 @@ function App() {
           <HowItWorks />
           <WineryCarousel />
           <Pricing />
+          <QiblaFinder />
+          <QuranPlayer />
           <Museum />
           <News />
           <ContactForm />

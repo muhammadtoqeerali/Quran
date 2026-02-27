@@ -1,33 +1,11 @@
 import { useState } from 'react';
-import { BookOpen, MapPin, Phone, Mail, Instagram, Facebook, Twitter, Youtube, ArrowUp, CheckCircle } from 'lucide-react';
+import { MapPin, Phone, Mail, Instagram, Facebook, Twitter, Youtube, ArrowUp, CheckCircle } from 'lucide-react';
 import { footerConfig } from '../config';
 
 // Icon lookup map for dynamic icon resolution from config strings
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  MapPin, Phone, Mail, Instagram, Facebook, Twitter, Youtube, ArrowUp, BookOpen,
+  MapPin, Phone, Mail, Instagram, Facebook, Twitter, Youtube, ArrowUp,
 };
-
-// Custom Quran Icon
-function QuranIcon({ className }: { className?: string }) {
-  return (
-    <svg 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="1.5" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-      <line x1="8" y1="6" x2="16" y2="6" />
-      <line x1="8" y1="10" x2="16" y2="10" />
-      <line x1="8" y1="14" x2="14" y2="14" />
-      <path d="M12 17l2 2-2 2" />
-    </svg>
-  );
-}
 
 export function Footer() {
   // Null check: if config is empty, render nothing
@@ -79,8 +57,12 @@ export function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center">
-                <QuranIcon className="w-6 h-6 text-white" />
+              <div className="w-14 h-14 rounded-lg overflow-hidden bg-white flex items-center justify-center">
+                <img 
+                  src={footerConfig.logo} 
+                  alt="Quran Academy Logo" 
+                  className="w-12 h-12 object-contain"
+                />
               </div>
               <div>
                 <span className="font-serif text-xl text-white block">{footerConfig.brandName}</span>

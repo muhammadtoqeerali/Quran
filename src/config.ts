@@ -1,5 +1,5 @@
 // =============================================================================
-// Quran Academy Configuration - Light Theme Version
+// Quran Academy Configuration - Enhanced Version
 // =============================================================================
 
 // -----------------------------------------------------------------------------
@@ -24,6 +24,67 @@ export const siteConfig: SiteConfig = {
 };
 
 // -----------------------------------------------------------------------------
+// Top Header Config (Country Contacts & Social Media)
+// -----------------------------------------------------------------------------
+export interface CountryContact {
+  country: string;
+  flag: string;
+  code: string;
+  whatsapp: string;
+}
+
+export interface SocialLink {
+  name: string;
+  icon: string;
+  url: string;
+}
+
+export interface TopHeaderConfig {
+  countries: CountryContact[];
+  socialLinks: SocialLink[];
+}
+
+export const topHeaderConfig: TopHeaderConfig = {
+  countries: [
+    {
+      country: "Pakistan",
+      flag: "🇵🇰",
+      code: "+92",
+      whatsapp: "+923428650577",
+    },
+    {
+      country: "Italy",
+      flag: "🇮🇹",
+      code: "+39",
+      whatsapp: "+393756173106",
+    },
+    {
+      country: "Dubai",
+      flag: "🇦🇪",
+      code: "+971",
+      whatsapp: "+971581628306",
+    },
+  ],
+  socialLinks: [
+    {
+      name: "Instagram",
+      icon: "Instagram",
+      url: "https://instagram.com/quranacademy",
+    },
+    {
+      name: "YouTube",
+      icon: "Youtube",
+      url: "https://youtube.com/quranacademy",
+    },
+    {
+      name: "Facebook",
+      icon: "Facebook",
+      url: "https://facebook.com/quranacademy",
+    },
+  ],
+};
+
+// -----------------------------------------------------------------------------
 // Navigation Config
 // -----------------------------------------------------------------------------
 export interface NavDropdownItem {
@@ -42,6 +103,7 @@ export interface NavigationConfig {
   brandName: string;
   brandSubname: string;
   tagline: string;
+  logo: string;
   navLinks: NavLink[];
   ctaButtonText: string;
 }
@@ -50,6 +112,7 @@ export const navigationConfig: NavigationConfig = {
   brandName: "Quran",
   brandSubname: "Academy",
   tagline: "Learn Quran Online",
+  logo: "/images/logo.png",
   navLinks: [
     { name: "Home", href: "#home", icon: "Home" },
     { name: "About", href: "#about", icon: "BookOpen" },
@@ -67,6 +130,7 @@ export const navigationConfig: NavigationConfig = {
       ]
     },
     { name: "Pricing", href: "#pricing", icon: "Tag" },
+    { name: "Tools", href: "#tools", icon: "Compass" },
     { name: "Blog", href: "#blog", icon: "Newspaper" },
     { name: "Contact", href: "#contact", icon: "Mail" },
   ],
@@ -80,12 +144,14 @@ export interface PreloaderConfig {
   brandName: string;
   brandSubname: string;
   yearText: string;
+  logo: string;
 }
 
 export const preloaderConfig: PreloaderConfig = {
   brandName: "Quran",
   brandSubname: "Academy",
   yearText: "Since 2015",
+  logo: "/images/logo.png",
 };
 
 // -----------------------------------------------------------------------------
@@ -183,199 +249,235 @@ export const featuresConfig: FeaturesConfig = {
 };
 
 // -----------------------------------------------------------------------------
-// Courses Config
+// Wine Showcase Config (Courses Display)
 // -----------------------------------------------------------------------------
-export interface Course {
+export interface Wine {
   id: string;
   name: string;
   subtitle: string;
-  description: string;
-  fullDescription: string;
+  year: string;
   image: string;
-  duration: string;
-  level: string;
-  ageGroup: string;
-  features: string[];
-  curriculum: string[];
-  price: string;
+  filter: string;
   glowColor: string;
+  description: string;
+  tastingNotes: string;
+  alcohol: string;
+  temperature: string;
+  aging: string;
 }
 
-export interface CoursesConfig {
+export interface WineFeature {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+export interface WineQuote {
+  text: string;
+  attribution: string;
+  prefix: string;
+}
+
+export interface WineShowcaseConfig {
   scriptText: string;
   subtitle: string;
   mainTitle: string;
-  description: string;
-  courses: Course[];
+  wines: Wine[];
+  features: WineFeature[];
+  quote: WineQuote;
 }
 
-export const coursesConfig: CoursesConfig = {
+export const wineShowcaseConfig: WineShowcaseConfig = {
   scriptText: "Our Programs",
   subtitle: "COMPREHENSIVE QURAN EDUCATION",
   mainTitle: "Explore Our Courses",
-  description: "We offer a wide range of courses designed to meet the needs of students at every level, from beginners to advanced learners.",
-  courses: [
+  wines: [
     {
       id: "kids",
       name: "Quran for Kids",
       subtitle: "Foundation Course",
-      description: "Specially designed for young learners with interactive lessons, colorful materials, and patient teachers who make Quran learning fun and engaging.",
-      fullDescription: "Our Quran for Kids course is designed to introduce children to the beautiful world of Quranic learning. Using age-appropriate methods, our teachers help kids develop a love for the Quran from an early age. The course covers Noorani Qaida, basic Tajweed rules, and short Surahs with proper pronunciation.",
+      year: "Ages 5-12",
       image: "/images/course-kids.jpg",
-      duration: "25-30 min",
-      level: "Beginner",
-      ageGroup: "Ages 5-12",
-      features: [
-        "One-on-one attention",
-        "Interactive learning games",
-        "Progress tracking for parents",
-        "Fun and engaging lessons",
-        "Flexible scheduling",
-      ],
-      curriculum: [
-        "Arabic alphabet recognition",
-        "Noorani Qaida fundamentals",
-        "Basic Tajweed rules",
-        "Short Surah memorization",
-        "Daily Duas and Islamic manners",
-      ],
-      price: "From $35/month",
+      filter: "",
       glowColor: "bg-emerald-500/20",
+      description: "Specially designed for young learners with interactive lessons, colorful materials, and patient teachers who make Quran learning fun and engaging.",
+      tastingNotes: "Noorani Qaida, Basic Tajweed, Short Surahs",
+      alcohol: "Beginner",
+      temperature: "25-30 min",
+      aging: "3-6 months",
     },
     {
       id: "reading",
       name: "Quran Reading",
       subtitle: "Tajweed Mastery",
-      description: "Master the art of Quran recitation with proper Tajweed rules. Learn to read fluently with correct pronunciation and rhythm.",
-      fullDescription: "This comprehensive course focuses on teaching students how to read the Quran with proper Tajweed. You'll learn all the rules of pronunciation, articulation points (Makharij), and characteristics of letters. By the end of this course, you'll be able to recite the Quran beautifully and correctly.",
+      year: "All Ages",
       image: "/images/course-reading.jpg",
-      duration: "30-45 min",
-      level: "All Levels",
-      ageGroup: "All Ages",
-      features: [
-        "Complete Tajweed rules",
-        "Makharij practice",
-        "Audio feedback",
-        "Recording for revision",
-        "Certificate of completion",
-      ],
-      curriculum: [
-        "Tajweed rules and application",
-        "Makharij (Articulation points)",
-        "Sifaat (Letter characteristics)",
-        "Ghunnah and Qalqalah rules",
-        "Stopping and starting rules",
-      ],
-      price: "From $40/month",
+      filter: "brightness(1.1) sepia(0.1)",
       glowColor: "bg-amber-500/20",
+      description: "Master the art of Quran recitation with proper Tajweed rules. Learn to read fluently with correct pronunciation and rhythm.",
+      tastingNotes: "Tajweed Rules, Makharij, Fluency",
+      alcohol: "All Levels",
+      temperature: "30-45 min",
+      aging: "6-12 months",
     },
     {
       id: "memorization",
-      name: "Quran Memorization",
-      subtitle: "Hifz Program",
-      description: "Structured memorization program with revision schedules, personalized plans, and experienced Hafiz tutors to guide you through the journey.",
-      fullDescription: "Our Hifz program is designed for students who wish to memorize the entire Quran. With a structured approach, regular revision schedules, and dedicated Hafiz tutors, we guide students through this noble journey. The program includes Muraja'ah (revision) techniques to ensure long-term retention.",
+      name: "Hifz Program",
+      subtitle: "Memorization",
+      year: "Intensive",
       image: "/images/course-memorization.jpg",
-      duration: "45-60 min",
-      level: "Intermediate+",
-      ageGroup: "All Ages",
-      features: [
-        "Personalized memorization plan",
-        "Daily revision schedule",
-        "Experienced Hafiz tutors",
-        "Progress tracking system",
-        "Ijazah upon completion",
-      ],
-      curriculum: [
-        "Daily new memorization (Hifz)",
-        "Revision of previous lessons (Muraja'ah)",
-        "Tajweed application in memorization",
-        "Monthly assessment tests",
-        "Completion and Ijazah ceremony",
-      ],
-      price: "From $50/month",
+      filter: "brightness(0.95) sepia(0.15)",
       glowColor: "bg-teal-600/20",
+      description: "Structured memorization program with revision schedules, personalized plans, and experienced Hafiz tutors to guide you through the journey.",
+      tastingNotes: "Full Hifz, Revision, Muraja'ah",
+      alcohol: "Intermediate+",
+      temperature: "45-60 min",
+      aging: "2-4 years",
     },
     {
       id: "females",
       name: "Ladies Classes",
       subtitle: "Sisters Only",
-      description: "Dedicated classes for sisters with female teachers. Learn in a comfortable environment with personalized attention and flexible scheduling.",
-      fullDescription: "Our Ladies Classes provide a comfortable and supportive learning environment for sisters. All classes are conducted by qualified female teachers who understand the unique needs of women learners. Whether you're a beginner or looking to improve your recitation, we have the right program for you.",
+      year: "All Ages",
       image: "/images/course-females.jpg",
-      duration: "30-45 min",
-      level: "All Levels",
-      ageGroup: "Ladies Only",
-      features: [
-        "100% female teachers",
-        "Private and comfortable setting",
-        "Flexible timing for busy mothers",
-        "Tafseer for women",
-        "Sisters-only group options",
-      ],
-      curriculum: [
-        "Quran reading with Tajweed",
-        "Tafseer of selected Surahs",
-        "Fiqh for daily life",
-        "Islamic etiquette for women",
-        "Stories of righteous women",
-      ],
-      price: "From $40/month",
+      filter: "brightness(1.05) sepia(0.05)",
       glowColor: "bg-rose-400/20",
+      description: "Dedicated classes for sisters with female teachers. Learn in a comfortable environment with personalized attention and flexible scheduling.",
+      tastingNotes: "Quran Reading, Tafseer, Islamic Studies",
+      alcohol: "All Levels",
+      temperature: "30-45 min",
+      aging: "Flexible",
     },
     {
       id: "islamic",
       name: "Islamic Studies",
-      subtitle: "Comprehensive Learning",
-      description: "Beyond Quran - learn about Islamic beliefs, practices, history, and values. Build a strong foundation in your faith and understanding.",
-      fullDescription: "Our Islamic Studies course provides comprehensive knowledge about Islam. From Aqeedah (beliefs) to Fiqh (jurisprudence), Seerah (Prophet's biography) to Islamic history, this course builds a strong foundation of Islamic knowledge for students of all ages.",
+      subtitle: "Comprehensive",
+      year: "All Ages",
       image: "/images/course-islamic.jpg",
-      duration: "30-45 min",
-      level: "All Levels",
-      ageGroup: "All Ages",
-      features: [
-        "Comprehensive curriculum",
-        "Age-appropriate content",
-        "Interactive discussions",
-        "Practical application",
-        "Certificate upon completion",
-      ],
-      curriculum: [
-        "Aqeedah (Islamic beliefs)",
-        "Fiqh (Islamic jurisprudence)",
-        "Seerah (Life of Prophet Muhammad)",
-        "Islamic history",
-        "Daily Duas and Adhkar",
-      ],
-      price: "From $35/month",
+      filter: "brightness(1.08) sepia(0.12)",
       glowColor: "bg-amber-600/20",
+      description: "Beyond Quran - learn about Islamic beliefs, practices, history, and values. Build a strong foundation in your faith and understanding.",
+      tastingNotes: "Aqeedah, Fiqh, Seerah, Dua",
+      alcohol: "All Levels",
+      temperature: "30-45 min",
+      aging: "Ongoing",
+    },
+  ],
+  features: [
+    {
+      icon: "Sparkles",
+      title: "Expert Tutors",
+      description: "Certified teachers with years of experience in Quranic education",
     },
     {
-      id: "arabic",
-      name: "Arabic Language",
-      subtitle: "Quranic Arabic",
-      description: "Learn the language of the Quran. Understand the meanings of words and phrases to deepen your connection with the Holy Book.",
-      fullDescription: "This course teaches Quranic Arabic, enabling students to understand the meanings of the words they recite. Starting from basic grammar to advanced vocabulary, students develop the skills to comprehend Quranic text independently.",
-      image: "/images/course-reading.jpg",
-      duration: "45 min",
-      level: "Beginner to Advanced",
-      ageGroup: "All Ages",
-      features: [
-        "Quranic vocabulary focus",
-        "Grammar fundamentals",
-        "Word-by-word translation",
-        "Interactive exercises",
-        "Progressive learning path",
-      ],
-      curriculum: [
-        "Arabic grammar basics",
-        "Quranic vocabulary",
-        "Sentence structure",
-        "Word analysis",
-        "Reading comprehension",
-      ],
-      price: "From $45/month",
-      glowColor: "bg-blue-500/20",
+      icon: "Thermometer",
+      title: "Flexible Schedule",
+      description: "Choose class times that work best for you and your family",
+    },
+    {
+      icon: "Clock",
+      title: "One-on-One",
+      description: "Personalized attention with individual online sessions",
+    },
+    {
+      icon: "Wine",
+      title: "Free Trial",
+      description: "Start with 3 free trial classes before committing",
+    },
+  ],
+  quote: {
+    text: "The best among you are those who learn the Quran and teach it.",
+    attribution: "Prophet Muhammad (PBUH)",
+    prefix: "Hadith",
+  },
+};
+
+// -----------------------------------------------------------------------------
+// How It Works Config
+// -----------------------------------------------------------------------------
+export interface Step {
+  number: string;
+  title: string;
+  description: string;
+}
+
+export interface HowItWorksConfig {
+  scriptText: string;
+  subtitle: string;
+  mainTitle: string;
+  steps: Step[];
+}
+
+export const howItWorksConfig: HowItWorksConfig = {
+  scriptText: "How It Works",
+  subtitle: "SIMPLE PROCESS",
+  mainTitle: "Start Learning in 3 Easy Steps",
+  steps: [
+    {
+      number: "01",
+      title: "Register for Free Trial",
+      description: "Fill out the registration form and schedule your 3 free trial classes. No credit card required!",
+    },
+    {
+      number: "02",
+      title: "Meet Your Teacher",
+      description: "Get matched with a qualified tutor based on your goals, schedule, and learning preferences.",
+    },
+    {
+      number: "03",
+      title: "Start Your Journey",
+      description: "Begin your Quran learning journey with personalized one-on-one classes at your convenience.",
+    },
+  ],
+};
+
+// -----------------------------------------------------------------------------
+// Carousel Config (How We Teach)
+// -----------------------------------------------------------------------------
+export interface CarouselSlide {
+  image: string;
+  title: string;
+  subtitle: string;
+  stat: string;
+  statLabel: string;
+  description: string;
+}
+
+export interface CarouselConfig {
+  scriptText: string;
+  subtitle: string;
+  mainTitle: string;
+  slides: CarouselSlide[];
+}
+
+export const carouselConfig: CarouselConfig = {
+  scriptText: "Our Approach",
+  subtitle: "MODERN LEARNING MEETS TRADITION",
+  mainTitle: "How We Teach",
+  slides: [
+    {
+      image: "/images/slider01.jpg",
+      title: "Interactive Learning",
+      subtitle: "Engaging Online Platform",
+      stat: "One-on-One",
+      statLabel: "Personal Sessions",
+      description: "Our state-of-the-art virtual classroom provides an immersive learning experience with screen sharing, digital whiteboards, and interactive Quran tools.",
+    },
+    {
+      image: "/images/slider02.jpg",
+      title: "Learn From Home",
+      subtitle: "Comfort & Convenience",
+      stat: "24/7",
+      statLabel: "Flexible Hours",
+      description: "No commuting required. Learn the Quran from the comfort of your home at times that suit your family's busy schedule.",
+    },
+    {
+      image: "/images/slider03.jpg",
+      title: "Global Community",
+      subtitle: "Students Worldwide",
+      stat: "500+",
+      statLabel: "Happy Students",
+      description: "Join a diverse community of learners from across the globe. Connect with fellow students and build lasting friendships.",
     },
   ],
 };
@@ -472,96 +574,6 @@ export const pricingConfig: PricingConfig = {
   ],
   note: "All prices are in USD. We accept payments via PayPal, Credit Card, and Bank Transfer.",
   familyDiscount: "Family Discount: 10% off for 2nd child, 15% off for 3rd child!",
-};
-
-// -----------------------------------------------------------------------------
-// How It Works Config
-// -----------------------------------------------------------------------------
-export interface Step {
-  number: string;
-  title: string;
-  description: string;
-}
-
-export interface HowItWorksConfig {
-  scriptText: string;
-  subtitle: string;
-  mainTitle: string;
-  steps: Step[];
-}
-
-export const howItWorksConfig: HowItWorksConfig = {
-  scriptText: "How It Works",
-  subtitle: "SIMPLE PROCESS",
-  mainTitle: "Start Learning in 3 Easy Steps",
-  steps: [
-    {
-      number: "01",
-      title: "Register for Free Trial",
-      description: "Fill out the registration form and schedule your 3 free trial classes. No credit card required!",
-    },
-    {
-      number: "02",
-      title: "Meet Your Teacher",
-      description: "Get matched with a qualified tutor based on your goals, schedule, and learning preferences.",
-    },
-    {
-      number: "03",
-      title: "Start Your Journey",
-      description: "Begin your Quran learning journey with personalized one-on-one classes at your convenience.",
-    },
-  ],
-};
-
-// -----------------------------------------------------------------------------
-// Carousel Config (How We Teach)
-// -----------------------------------------------------------------------------
-export interface CarouselSlide {
-  image: string;
-  title: string;
-  subtitle: string;
-  stat: string;
-  statLabel: string;
-  description: string;
-}
-
-export interface CarouselConfig {
-  scriptText: string;
-  subtitle: string;
-  mainTitle: string;
-  slides: CarouselSlide[];
-}
-
-export const carouselConfig: CarouselConfig = {
-  scriptText: "Our Approach",
-  subtitle: "MODERN LEARNING MEETS TRADITION",
-  mainTitle: "How We Teach",
-  slides: [
-    {
-      image: "/images/slider01.jpg",
-      title: "Interactive Learning",
-      subtitle: "Engaging Online Platform",
-      stat: "One-on-One",
-      statLabel: "Personal Sessions",
-      description: "Our state-of-the-art virtual classroom provides an immersive learning experience with screen sharing, digital whiteboards, and interactive Quran tools.",
-    },
-    {
-      image: "/images/slider02.jpg",
-      title: "Learn From Home",
-      subtitle: "Comfort & Convenience",
-      stat: "24/7",
-      statLabel: "Flexible Hours",
-      description: "No commuting required. Learn the Quran from the comfort of your home at times that suit your family's busy schedule.",
-    },
-    {
-      image: "/images/slider03.jpg",
-      title: "Global Community",
-      subtitle: "Students Worldwide",
-      stat: "500+",
-      statLabel: "Happy Students",
-      description: "Join a diverse community of learners from across the globe. Connect with fellow students and build lasting friendships.",
-    },
-  ],
 };
 
 // -----------------------------------------------------------------------------
@@ -806,6 +818,67 @@ export const newsConfig: NewsConfig = {
 };
 
 // -----------------------------------------------------------------------------
+// Qibla Finder Config
+// -----------------------------------------------------------------------------
+export interface QiblaFinderConfig {
+  scriptText: string;
+  subtitle: string;
+  mainTitle: string;
+  description: string;
+  kaabaCoords: { lat: number; lng: number };
+  instructions: string[];
+}
+
+export const qiblaFinderConfig: QiblaFinderConfig = {
+  scriptText: "Qibla Direction",
+  subtitle: "FIND YOUR PRAYER DIRECTION",
+  mainTitle: "Qibla Finder",
+  description: "Use our Qibla finder to determine the exact direction of the Kaaba from your current location. Simply allow location access or enter your coordinates manually.",
+  kaabaCoords: { lat: 21.4224779, lng: 39.8251832 },
+  instructions: [
+    "Allow location access or enter your city name",
+    "The compass will show the Qibla direction",
+    "Turn to face the direction indicated by the arrow",
+    "The angle shown is measured from True North clockwise",
+  ],
+};
+
+// -----------------------------------------------------------------------------
+// Quran Player Config
+// -----------------------------------------------------------------------------
+export interface Reciter {
+  id: string;
+  name: string;
+  language: string;
+}
+
+export interface QuranPlayerConfig {
+  scriptText: string;
+  subtitle: string;
+  mainTitle: string;
+  description: string;
+  reciters: Reciter[];
+  translations: string[];
+  apiBaseUrl: string;
+}
+
+export const quranPlayerConfig: QuranPlayerConfig = {
+  scriptText: "Listen to Quran",
+  subtitle: "QURAN AUDIO WITH TRANSLATION",
+  mainTitle: "Quran Player",
+  description: "Listen to the Holy Quran with beautiful recitations and translations in multiple languages. Select a Surah and reciter to begin.",
+  reciters: [
+    { id: "ar.alafasy", name: "Mishary Rashid Al-Afasy", language: "Arabic" },
+    { id: "ar.abdurrahmaansudais", name: "Abdul Rahman Al-Sudais", language: "Arabic" },
+    { id: "ar.shaatree", name: "Abu Bakr Al-Shatri", language: "Arabic" },
+    { id: "ar.husary", name: "Mahmoud Khalil Al-Husary", language: "Arabic" },
+    { id: "ar.minshawi", name: "Mohamed Siddiq El-Minshawi", language: "Arabic" },
+  ],
+  translations: ["en.sahih", "ur.jalandhry", "fr.hamidullah", "es.cortes"],
+  apiBaseUrl: "https://api.alquran.cloud/v1",
+};
+
+// -----------------------------------------------------------------------------
 // Contact Form Config
 // -----------------------------------------------------------------------------
 export interface ContactInfoItem {
@@ -844,6 +917,7 @@ export interface ContactFormConfig {
   form: ContactFormFields;
   privacyNotice: string;
   formEndpoint: string;
+  emailTo: string;
 }
 
 export const contactFormConfig: ContactFormConfig = {
@@ -856,13 +930,13 @@ export const contactFormConfig: ContactFormConfig = {
     {
       icon: "Phone",
       label: "WhatsApp",
-      value: "+44 730 721 9555",
+      value: "+39 375 617 3106",
       subtext: "Available 24/7",
     },
     {
       icon: "Mail",
       label: "Email",
-      value: "info@quranacademy.com",
+      value: "touqeermalik6677@gmail.com",
       subtext: "We reply within 24 hours",
     },
     {
@@ -884,7 +958,7 @@ export const contactFormConfig: ContactFormConfig = {
     emailLabel: "Email Address",
     emailPlaceholder: "your@email.com",
     phoneLabel: "Phone / WhatsApp",
-    phonePlaceholder: "+44 XXX XXX XXXX",
+    phonePlaceholder: "+XXX XXX XXX XXXX",
     courseLabel: "Select Course",
     courseOptions: [
       "Quran for Kids",
@@ -905,13 +979,14 @@ export const contactFormConfig: ContactFormConfig = {
     errorMessage: "Something went wrong. Please try again or contact us directly via WhatsApp.",
   },
   privacyNotice: "By submitting this form, you agree to our privacy policy. Your information is secure and will never be shared with third parties.",
-  formEndpoint: "https://formspree.io/f/YOUR_FORM_ID",
+  formEndpoint: "https://formspree.io/f/xnqevjgw",
+  emailTo: "touqeermalik6677@gmail.com",
 };
 
 // -----------------------------------------------------------------------------
 // Footer Config
 // -----------------------------------------------------------------------------
-export interface SocialLink {
+export interface FooterSocialLink {
   icon: string;
   label: string;
   href: string;
@@ -936,7 +1011,8 @@ export interface FooterConfig {
   brandName: string;
   tagline: string;
   description: string;
-  socialLinks: SocialLink[];
+  logo: string;
+  socialLinks: FooterSocialLink[];
   linkGroups: FooterLinkGroup[];
   contactItems: FooterContactItem[];
   newsletterLabel: string;
@@ -956,6 +1032,7 @@ export const footerConfig: FooterConfig = {
   brandName: "Quran Academy",
   tagline: "Learn Quran Online",
   description: "Providing quality online Quran education to Muslims worldwide since 2015. One-to-one classes with expert Al-Azhar certified tutors.",
+  logo: "/images/logo.png",
   socialLinks: [
     { icon: "Facebook", label: "Facebook", href: "https://facebook.com/quranacademy" },
     { icon: "Instagram", label: "Instagram", href: "https://instagram.com/quranacademy" },
@@ -970,6 +1047,7 @@ export const footerConfig: FooterConfig = {
         { name: "About Us", href: "#about" },
         { name: "Courses", href: "#courses" },
         { name: "Pricing", href: "#pricing" },
+        { name: "Tools", href: "#tools" },
         { name: "Blog", href: "#blog" },
         { name: "Contact", href: "#contact" },
       ],
@@ -987,8 +1065,8 @@ export const footerConfig: FooterConfig = {
     },
   ],
   contactItems: [
-    { icon: "Phone", text: "+44 730 721 9555" },
-    { icon: "Mail", text: "info@quranacademy.com" },
+    { icon: "Phone", text: "+39 375 617 3106" },
+    { icon: "Mail", text: "touqeermalik6677@gmail.com" },
     { icon: "MapPin", text: "Online - Worldwide" },
   ],
   newsletterLabel: "Subscribe to our newsletter for Islamic tips and updates",
@@ -1013,201 +1091,4 @@ export interface ScrollToTopConfig {
 
 export const scrollToTopConfig: ScrollToTopConfig = {
   ariaLabel: "Back to top",
-};
-
-// -----------------------------------------------------------------------------
-// Wine Showcase Config (Courses Display)
-// -----------------------------------------------------------------------------
-export interface Wine {
-  id: string;
-  name: string;
-  subtitle: string;
-  year: string;
-  image: string;
-  filter: string;
-  glowColor: string;
-  description: string;
-  tastingNotes: string;
-  alcohol: string;
-  temperature: string;
-  aging: string;
-}
-
-export interface WineFeature {
-  icon: string;
-  title: string;
-  description: string;
-}
-
-export interface WineQuote {
-  text: string;
-  attribution: string;
-  prefix: string;
-}
-
-export interface WineShowcaseConfig {
-  scriptText: string;
-  subtitle: string;
-  mainTitle: string;
-  wines: Wine[];
-  features: WineFeature[];
-  quote: WineQuote;
-}
-
-export const wineShowcaseConfig: WineShowcaseConfig = {
-  scriptText: "Our Programs",
-  subtitle: "COMPREHENSIVE QURAN EDUCATION",
-  mainTitle: "Explore Our Courses",
-  wines: [
-    {
-      id: "kids",
-      name: "Quran for Kids",
-      subtitle: "Foundation Course",
-      year: "Ages 5-12",
-      image: "/images/course-kids.jpg",
-      filter: "",
-      glowColor: "bg-emerald-500/20",
-      description: "Specially designed for young learners with interactive lessons, colorful materials, and patient teachers who make Quran learning fun and engaging.",
-      tastingNotes: "Noorani Qaida, Basic Tajweed, Short Surahs",
-      alcohol: "Beginner",
-      temperature: "25-30 min",
-      aging: "3-6 months",
-    },
-    {
-      id: "reading",
-      name: "Quran Reading",
-      subtitle: "Tajweed Mastery",
-      year: "All Ages",
-      image: "/images/course-reading.jpg",
-      filter: "brightness(1.1) sepia(0.1)",
-      glowColor: "bg-amber-500/20",
-      description: "Master the art of Quran recitation with proper Tajweed rules. Learn to read fluently with correct pronunciation and rhythm.",
-      tastingNotes: "Tajweed Rules, Makharij, Fluency",
-      alcohol: "All Levels",
-      temperature: "30-45 min",
-      aging: "6-12 months",
-    },
-    {
-      id: "memorization",
-      name: "Hifz Program",
-      subtitle: "Memorization",
-      year: "Intensive",
-      image: "/images/course-memorization.jpg",
-      filter: "brightness(0.95) sepia(0.15)",
-      glowColor: "bg-teal-600/20",
-      description: "Structured memorization program with revision schedules, personalized plans, and experienced Hafiz tutors to guide you through the journey.",
-      tastingNotes: "Full Hifz, Revision, Muraja'ah",
-      alcohol: "Intermediate+",
-      temperature: "45-60 min",
-      aging: "2-4 years",
-    },
-    {
-      id: "females",
-      name: "Ladies Classes",
-      subtitle: "Sisters Only",
-      year: "All Ages",
-      image: "/images/course-females.jpg",
-      filter: "brightness(1.05) sepia(0.05)",
-      glowColor: "bg-rose-400/20",
-      description: "Dedicated classes for sisters with female teachers. Learn in a comfortable environment with personalized attention and flexible scheduling.",
-      tastingNotes: "Quran Reading, Tafseer, Islamic Studies",
-      alcohol: "All Levels",
-      temperature: "30-45 min",
-      aging: "Flexible",
-    },
-    {
-      id: "islamic",
-      name: "Islamic Studies",
-      subtitle: "Comprehensive",
-      year: "All Ages",
-      image: "/images/course-islamic.jpg",
-      filter: "brightness(1.08) sepia(0.12)",
-      glowColor: "bg-amber-600/20",
-      description: "Beyond Quran - learn about Islamic beliefs, practices, history, and values. Build a strong foundation in your faith and understanding.",
-      tastingNotes: "Aqeedah, Fiqh, Seerah, Dua",
-      alcohol: "All Levels",
-      temperature: "30-45 min",
-      aging: "Ongoing",
-    },
-  ],
-  features: [
-    {
-      icon: "Sparkles",
-      title: "Expert Tutors",
-      description: "Certified teachers with years of experience in Quranic education",
-    },
-    {
-      icon: "Thermometer",
-      title: "Flexible Schedule",
-      description: "Choose class times that work best for you and your family",
-    },
-    {
-      icon: "Clock",
-      title: "One-on-One",
-      description: "Personalized attention with individual online sessions",
-    },
-    {
-      icon: "Wine",
-      title: "Free Trial",
-      description: "Start with 3 free trial classes before committing",
-    },
-  ],
-  quote: {
-    text: "The best among you are those who learn the Quran and teach it.",
-    attribution: "Prophet Muhammad (PBUH)",
-    prefix: "Hadith",
-  },
-};
-
-// -----------------------------------------------------------------------------
-// Winery Carousel Config
-// -----------------------------------------------------------------------------
-export interface WineryCarouselSlide {
-  image: string;
-  title: string;
-  subtitle: string;
-  area: string;
-  unit: string;
-  description: string;
-}
-
-export interface WineryCarouselConfig {
-  scriptText: string;
-  subtitle: string;
-  mainTitle: string;
-  locationTag: string;
-  slides: WineryCarouselSlide[];
-}
-
-export const wineryCarouselConfig: WineryCarouselConfig = {
-  scriptText: "Our Approach",
-  subtitle: "MODERN LEARNING MEETS TRADITION",
-  mainTitle: "How We Teach",
-  locationTag: "Global Online Academy",
-  slides: [
-    {
-      image: "/images/slider01.jpg",
-      title: "Interactive Learning",
-      subtitle: "Engaging Online Platform",
-      area: "One-on-One",
-      unit: "Sessions",
-      description: "Our state-of-the-art virtual classroom provides an immersive learning experience with screen sharing, digital whiteboards, and interactive Quran tools.",
-    },
-    {
-      image: "/images/slider02.jpg",
-      title: "Learn From Home",
-      subtitle: "Comfort & Convenience",
-      area: "Flexible",
-      unit: "Scheduling",
-      description: "No commuting required. Learn the Quran from the comfort of your home at times that suit your family's busy schedule.",
-    },
-    {
-      image: "/images/slider03.jpg",
-      title: "Global Community",
-      subtitle: "Students Worldwide",
-      area: "500+",
-      unit: "Students",
-      description: "Join a diverse community of learners from across the globe. Connect with fellow students and build lasting friendships.",
-    },
-  ],
 };

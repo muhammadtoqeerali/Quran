@@ -1,36 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, ChevronDown, BookOpen, Home, Newspaper, Users, Mail, Book, Tag } from 'lucide-react';
+import { Menu, X, ChevronDown, BookOpen, Home, Newspaper, Users, Mail, Book, Tag, Compass } from 'lucide-react';
 import { navigationConfig } from '../config';
 
 // Icon lookup map for dynamic icon resolution from config strings
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Home, BookOpen, Newspaper, Users, Mail, Book, Tag, Menu, X, ChevronDown,
+  Home, BookOpen, Newspaper, Users, Mail, Book, Tag, Compass, Menu, X, ChevronDown,
 };
-
-// Custom Quran Icon Component
-function QuranIcon({ className }: { className?: string }) {
-  return (
-    <svg 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="1.5" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      className={className}
-    >
-      {/* Book outline */}
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-      {/* Decorative lines representing text */}
-      <line x1="8" y1="6" x2="16" y2="6" />
-      <line x1="8" y1="10" x2="16" y2="10" />
-      <line x1="8" y1="14" x2="14" y2="14" />
-      {/* Decorative element */}
-      <path d="M12 17l2 2-2 2" />
-    </svg>
-  );
-}
 
 export function Navigation() {
   // Null check: if config is empty, render nothing
@@ -71,37 +46,33 @@ export function Navigation() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      className={`sticky top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-lg py-3'
-          : 'bg-transparent py-5'
+          ? 'bg-white/95 backdrop-blur-md shadow-lg'
+          : 'bg-white'
       }`}
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="container-custom flex items-center justify-between">
+      <div className="container-custom flex items-center justify-between py-3">
         {/* Logo */}
         <button
           onClick={() => scrollToSection('#hero')}
           className="flex items-center gap-3 group"
           aria-label={navigationConfig.brandName}
         >
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 ${
-            isScrolled 
-              ? 'bg-emerald-600 text-white' 
-              : 'bg-white/20 text-white backdrop-blur-sm'
-          } group-hover:scale-110`}>
-            <QuranIcon className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-lg overflow-hidden transition-transform duration-300 group-hover:scale-105">
+            <img 
+              src={navigationConfig.logo} 
+              alt="Quran Academy Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <div className="flex flex-col">
-            <span className={`font-serif text-xl tracking-wide transition-colors ${
-              isScrolled ? 'text-gray-800' : 'text-white'
-            }`}>
+            <span className="font-serif text-xl text-gray-800 tracking-wide">
               {navigationConfig.brandName}
             </span>
-            <span className={`text-[10px] tracking-widest uppercase transition-colors ${
-              isScrolled ? 'text-emerald-600' : 'text-white/80'
-            }`}>
+            <span className="text-[10px] tracking-widest uppercase text-emerald-600">
               {navigationConfig.tagline}
             </span>
           </div>
@@ -119,11 +90,7 @@ export function Navigation() {
             >
               <button
                 onClick={() => !link.dropdown && scrollToSection(link.href)}
-                className={`flex items-center gap-1 text-sm font-medium transition-colors duration-300 py-2 ${
-                  isScrolled 
-                    ? 'text-gray-600 hover:text-emerald-600' 
-                    : 'text-white/90 hover:text-white'
-                }`}
+                className="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors duration-300 py-2"
                 role="menuitem"
                 aria-haspopup={link.dropdown ? 'true' : undefined}
                 aria-expanded={link.dropdown ? activeDropdown === link.name : undefined}
@@ -177,7 +144,7 @@ export function Navigation() {
 
         {/* Mobile Menu Button */}
         <button
-          className={`lg:hidden p-2 ${isScrolled ? 'text-gray-800' : 'text-white'}`}
+          className="lg:hidden p-2 text-gray-800"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={isMobileMenuOpen}

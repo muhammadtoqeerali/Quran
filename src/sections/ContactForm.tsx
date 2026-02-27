@@ -46,10 +46,20 @@ export function ContactForm() {
     setIsSubmitting(true);
 
     try {
+      // Prepare form data with email recipient
+      const formDataWithEmail = {
+        ...formData,
+        _replyto: contactFormConfig.emailTo,
+        _subject: `New Registration from ${formData.name} - Quran Academy`,
+      };
+
       const response = await fetch(contactFormConfig.formEndpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(formDataWithEmail),
       });
 
       if (response.ok) {
