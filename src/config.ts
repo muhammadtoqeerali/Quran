@@ -1,4 +1,4 @@
-// =============================================================================
+﻿// =============================================================================
 // Quran Academy Configuration - Enhanced Version
 // =============================================================================
 
@@ -48,19 +48,19 @@ export const topHeaderConfig: TopHeaderConfig = {
   countries: [
     {
       country: "Pakistan",
-      flag: "🇵🇰",
+      flag: "ðŸ‡µðŸ‡°",
       code: "+92",
       whatsapp: "+923428650577",
     },
     {
       country: "Italy",
-      flag: "🇮🇹",
+      flag: "ðŸ‡®ðŸ‡¹",
       code: "+39",
       whatsapp: "+393756173106",
     },
     {
       country: "Dubai",
-      flag: "🇦🇪",
+      flag: "ðŸ‡¦ðŸ‡ª",
       code: "+971",
       whatsapp: "+971581628306",
     },
@@ -177,7 +177,7 @@ export interface HeroConfig {
 }
 
 export const heroConfig: HeroConfig = {
-  scriptText: "بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ",
+  scriptText: "Ø¨ÙØ³Ù’Ù…Ù Ø§Ù„Ù„Ù‡Ù Ø§Ù„Ø±ÙŽÙ‘Ø­Ù’Ù…Ù°Ù†Ù Ø§Ù„Ø±ÙŽÙ‘Ø­ÙÙŠÙ’Ù…Ù",
   mainTitle: "Learn Quran Online\nWith Expert Tutors",
   subtitle: "One-to-one online Quran classes for kids and adults. Start your spiritual journey today with our certified teachers from Al-Azhar University.",
   ctaButtonText: "Start Free Trial",
@@ -190,7 +190,7 @@ export const heroConfig: HeroConfig = {
     { value: 30, suffix: "+", label: "Countries" },
     { value: 9, suffix: "+", label: "Years Experience" },
   ],
-  decorativeText: "Learn • Grow • Connect",
+  decorativeText: "Learn â€¢ Grow â€¢ Connect",
   backgroundImage: "/images/hero-banner.jpg",
 };
 
@@ -833,6 +833,22 @@ export const qiblaFinderConfig: QiblaFinderConfig = {
   scriptText: "Qibla Direction",
   subtitle: "FIND YOUR PRAYER DIRECTION",
   mainTitle: "Qibla Finder",
+  description: "Open the live camera and get an on-screen Qibla direction overlay based on your current location and device heading.",
+  kaabaCoords: { lat: 21.4224779, lng: 39.8251832 },
+  instructions: [
+    "Tap Start Camera Qibla View and allow location, camera, and motion permissions",
+    "Hold your phone upright and slowly rotate until the arrow points straight ahead",
+    "When aligned, the direction in front of you is Qibla",
+    "Use the live heading and bearing details for extra accuracy",
+  ],
+};
+// -----------------------------------------------------------------------------  instructions: string[];
+}
+
+export const qiblaFinderConfig: QiblaFinderConfig = {
+  scriptText: "Qibla Direction",
+  subtitle: "FIND YOUR PRAYER DIRECTION",
+  mainTitle: "Qibla Finder",
   description: "Use our Qibla finder to determine the exact direction of the Kaaba from your current location. Simply allow location access or enter your coordinates manually.",
   kaabaCoords: { lat: 21.4224779, lng: 39.8251832 },
   instructions: [
@@ -1075,7 +1091,7 @@ export const footerConfig: FooterConfig = {
   newsletterSuccessText: "Thank you for subscribing!",
   newsletterErrorText: "Please try again.",
   newsletterEndpoint: "https://formspree.io/f/YOUR_NEWSLETTER_ID",
-  copyrightText: "© 2026 Quran Academy. All Rights Reserved.",
+  copyrightText: "Â© 2026 Quran Academy. All Rights Reserved.",
   legalLinks: ["Privacy Policy", "Terms of Service", "Refund Policy"],
   icpText: "",
   backToTopText: "Back to Top",
@@ -1092,3 +1108,4 @@ export interface ScrollToTopConfig {
 export const scrollToTopConfig: ScrollToTopConfig = {
   ariaLabel: "Back to top",
 };
+
