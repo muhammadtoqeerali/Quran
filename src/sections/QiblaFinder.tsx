@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Navigation } from 'lucide-react';
 import { qiblaFinderConfig } from '../config';
 
-// Calculate Qibla direction using the spherical law of cosines:contentReference[oaicite:0]{index=0}
+// Calculate Qibla direction using the spherical law of cosines:contentReference[oaicite:0]{index=0}.
 function calculateQiblaDirection(lat: number, lng: number): number {
   const kaabaLat = qiblaFinderConfig.kaabaCoords.lat;
   const kaabaLng = qiblaFinderConfig.kaabaCoords.lng;
@@ -24,15 +24,14 @@ function calculateQiblaDirection(lat: number, lng: number): number {
 }
 
 export function QiblaFinder() {
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [qiblaAngle, setQiblaAngle] = useState<number | null>(null);
   const [heading, setHeading] = useState<number | null>(null);
   const [error, setError] = useState<string>('');
-  const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
 
-  // Intersection observer for fade-up animations:contentReference[oaicite:1]{index=1}
+  // Intersection observer to reveal fade‑up elements:contentReference[oaicite:1]{index=1}.
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
@@ -49,45 +48,49 @@ export function QiblaFinder() {
     return () => observer.disconnect();
   }, []);
 
-  // Fetch geolocation and start the camera on mount
+  // Obtain location and start camera on mount.
   useEffect(() => {
     const getLocationAndCamera = async () => {
+      // Geolocation
       if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser');
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        const { latitude, longitude } = position.coords;
-        setLocation({ lat: latitude, lng: longitude });
-        setQiblaAngle(calculateQiblaDirection(latitude, longitude));
-      },
-      () => setError('Unable to retrieve your location'),
-    );
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
-      });
-      setStream(mediaStream);
-      if (videoRef.current) {
-        // Assign stream to srcObject (TypeScript doesn’t know about it)
-        (videoRef.current as any).srcObject = mediaStream;
+        setError('Geolocation is not supported by your browser');
+        return;
       }
-    } catch {
-      setError('Unable to access the camera');
-    }
-  };
-  getLocationAndCamera();
-  return () => {
-    stream?.getTracks().forEach(track => track.stop());
-  };
-}, []);
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          const { latitude, longitude } = position.coords;
+          setQiblaAngle(calculateQiblaDirection(latitude, longitude));
+        },
+        () => setError('Unable to retrieve your location'),
+      );
 
-  // Listen for device orientation events to compute the heading
+      // Camera
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } },
+        });
+        streamRef.current = mediaStream;
+        if (videoRef.current) {
+          // Assign stream to srcObject; TypeScript doesn’t know about it.
+          (videoRef.current as any).srcObject = mediaStream;
+        }
+      } catch {
+        setError('Unable to access the camera');
+      }
+    };
+
+    getLocationAndCamera();
+
+    return () => {
+      // Stop the camera when the component unmounts.
+      streamRef.current?.getTracks().forEach(track => track.stop());
+    };
+  }, []);
+
+  // Listen for device orientation to compute heading.
   useEffect(() => {
-    const handleOrientation = (event: DeviceOrientationEvent) => {
-      if (event.alpha !== null) {
-        // 0° = North; invert alpha to get compass heading
+    const handleOrientation = (event: any) => {
+      if (event.alpha !== null && event.alpha !== undefined) {
         const headingDeg = (360 - event.alpha) % 360;
         setHeading(headingDeg);
       }
@@ -100,7 +103,6 @@ export function QiblaFinder() {
     };
   }, []);
 
-  // Compute the rotation difference for the arrow
   const rotation =
     heading !== null && qiblaAngle !== null
       ? ((qiblaAngle - heading + 360) % 360)
@@ -131,7 +133,7 @@ export function QiblaFinder() {
           <p className="text-gray-600 text-lg fade-up">{qiblaFinderConfig.description}</p>
         </div>
 
-        {/* Camera feed with Qibla overlay */}
+        {/* Camera view with Qibla overlay */}
         <div className="fade-up flex justify-center">
           <div className="relative w-full h-96 overflow-hidden rounded-lg shadow-lg">
             <video
