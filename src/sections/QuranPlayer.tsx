@@ -27,10 +27,10 @@ interface TranslationOption {
   audioIdentifier?: string;
 }
 
+// Translation options - English has audio, Urdu text-only for now
 const translationOptions: TranslationOption[] = [
   { id: "en.sahih", name: "English - Sahih International", language: "English", hasAudio: true, audioIdentifier: "en.walk" },
   { id: "ur.jalandhry", name: "Urdu - Jalandhry", language: "Urdu", hasAudio: false },
-  { id: "ur.ahmedali", name: "Urdu - Ahmed Ali", language: "Urdu", hasAudio: false },
 ];
 
 export function QuranPlayer() {
@@ -128,16 +128,23 @@ export function QuranPlayer() {
   // Handle Arabic audio ending - play translation next
   const handleArabicEnd = useCallback(() => {
     const currentAyahData = ayahs[currentAyah];
+    const currentTranslation = translationOptions.find(t => t.id === selectedTranslation);
     
-    if (playTranslationAudio && currentAyahData?.translationAudio && translationAudioRef.current) {
-      // Play translation audio
+    // Only play translation audio if:
+    // 1. User enabled translation audio
+    // 2. Current translation has audio available
+    // 3. Translation audio exists for this ayah
+    if (playTranslationAudio && 
+        currentTranslation?.hasAudio && 
+        currentAyahData?.translationAudio && 
+        translationAudioRef.current) {
       setCurrentlyPlaying('translation');
       translationAudioRef.current.play();
     } else {
       // No translation audio, move to next ayah
       handleAyahEnd();
     }
-  }, [currentAyah, ayahs, playTranslationAudio]);
+  }, [currentAyah, ayahs, playTranslationAudio, selectedTranslation]);
 
   // Handle translation audio ending - move to next ayah
   const handleTranslationEnd = useCallback(() => {
@@ -149,7 +156,6 @@ export function QuranPlayer() {
     if (currentAyah < ayahs.length - 1) {
       setCurrentAyah(prev => prev + 1);
       setCurrentlyPlaying('arabic');
-      // Arabic audio will auto-play due to src change
     } else {
       // End of surah
       setIsPlaying(false);
@@ -266,13 +272,13 @@ export function QuranPlayer() {
               >
                 {translationOptions.map((trans) => (
                   <option key={trans.id} value={trans.id}>
-                    {trans.language}
+                    {trans.language} {trans.hasAudio ? '(Audio)' : '(Text)'}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Translation Audio Toggle */}
+            {/* Translation Audio Toggle - only show if translation has audio */}
             {currentTranslation?.hasAudio && (
               <button
                 onClick={() => setPlayTranslationAudio(!playTranslationAudio)}
@@ -475,7 +481,9 @@ export function QuranPlayer() {
             Audio powered by Al Quran Cloud API. Click on any ayah to play it.
           </p>
           <p className="text-center text-gray-400 text-xs mt-1">
-            English translation audio available. Urdu audio coming soon.
+            {currentTranslation?.hasAudio 
+              ? 'Translation audio available.' 
+              : 'Translation audio not available for this language.'}
           </p>
         </div>
       </div>

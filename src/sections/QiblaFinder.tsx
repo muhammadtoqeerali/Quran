@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Compass, RotateCw, Camera, AlertCircle, X, Info } from 'lucide-react';
 import { qiblaFinderConfig } from '../config';
 
@@ -44,15 +44,10 @@ function calculateDistance(lat: number, lng: number): number {
 function KaabaIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
     <svg viewBox="0 0 100 100" className={className} style={style} fill="currentColor">
-      {/* Kaaba base */}
       <path d="M20 40 L50 30 L80 40 L80 75 L50 85 L20 75 Z" fill="#1a1a2e" />
-      {/* Kaaba top */}
       <path d="M20 40 L50 30 L80 40 L50 50 Z" fill="#16213e" />
-      {/* Gold band */}
       <path d="M20 55 L80 55 L80 60 L20 60 Z" fill="#d4af37" />
-      {/* Door */}
       <path d="M42 55 L58 55 L58 75 L42 75 Z" fill="#0f0f1a" />
-      {/* Door frame */}
       <path d="M40 55 L60 55 L60 77 L40 77 Z" fill="none" stroke="#d4af37" strokeWidth="2" />
     </svg>
   );
@@ -67,6 +62,7 @@ export function QiblaFinder() {
   const [cameraActive, setCameraActive] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(true);
+  const [hasLocation, setHasLocation] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -95,7 +91,6 @@ export function QiblaFinder() {
     const handleOrientation = (event: DeviceOrientationEvent) => {
       let heading = event.alpha || 0;
       
-      // iOS webkitCompassHeading
       if ((event as any).webkitCompassHeading) {
         heading = (event as any).webkitCompassHeading;
       }
@@ -121,7 +116,7 @@ export function QiblaFinder() {
     };
   }, []);
 
-  const startCamera = useCallback(async () => {
+  const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' },
@@ -132,7 +127,7 @@ export function QiblaFinder() {
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        await videoRef.current.play();
       }
       
       setCameraActive(true);
@@ -142,9 +137,9 @@ export function QiblaFinder() {
       setPermissionDenied(true);
       setCameraActive(false);
     }
-  }, []);
+  };
 
-  const stopCamera = useCallback(() => {
+  const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
@@ -153,7 +148,7 @@ export function QiblaFinder() {
       videoRef.current.srcObject = null;
     }
     setCameraActive(false);
-  }, []);
+  };
 
   const getLocation = () => {
     setLoading(true);
@@ -168,19 +163,24 @@ export function QiblaFinder() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        setQiblaAngle(calculateQiblaDirection(latitude, longitude));
-        setDistance(calculateDistance(latitude, longitude));
+        const calculatedAngle = calculateQiblaDirection(latitude, longitude);
+        const calculatedDistance = calculateDistance(latitude, longitude);
+        
+        setQiblaAngle(calculatedAngle);
+        setDistance(calculatedDistance);
+        setHasLocation(true);
         setLoading(false);
         setShowOnboarding(false);
         
-        // Auto-start camera after getting location
+        // Start camera after getting location
         startCamera();
       },
-      () => {
-        setError('Unable to retrieve your location. Please enable location services.');
+      (err) => {
+        console.error('Geolocation error:', err);
+        setError('Unable to retrieve your location. Please enable location services and try again.');
         setLoading(false);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   };
 
@@ -202,7 +202,6 @@ export function QiblaFinder() {
       ref={sectionRef}
       className="section-padding bg-gradient-to-b from-emerald-50/30 to-white relative overflow-hidden"
     >
-      {/* Decorative elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-100/30 rounded-full -translate-x-1/2 -translate-y-1/2" />
       <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-100/20 rounded-full translate-x-1/3 translate-y-1/3" />
       
@@ -226,9 +225,8 @@ export function QiblaFinder() {
         {/* Main Qibla Finder Container */}
         <div className="fade-up max-w-md mx-auto" style={{ transitionDelay: '0.1s' }}>
           {showOnboarding ? (
-            // Onboarding Screen - Google Qibla Finder Style
+            // Onboarding Screen
             <div className="relative bg-gradient-to-b from-purple-600 via-purple-700 to-indigo-900 rounded-3xl overflow-hidden shadow-2xl">
-              {/* Islamic Pattern Background */}
               <div className="absolute inset-0 opacity-10">
                 <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                   <pattern id="islamic-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -239,14 +237,11 @@ export function QiblaFinder() {
                 </svg>
               </div>
               
-              {/* Content */}
               <div className="relative z-10 p-8 text-center min-h-[500px] flex flex-col items-center justify-center">
-                {/* Kaaba Icon */}
                 <div className="mb-8 relative">
                   <div className="w-32 h-32 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
                     <KaabaIcon className="w-20 h-20 text-white" />
                   </div>
-                  {/* Glow effect */}
                   <div className="absolute inset-0 w-32 h-32 rounded-full bg-amber-400/30 blur-xl -z-10" />
                 </div>
                 
@@ -258,7 +253,7 @@ export function QiblaFinder() {
                 <button
                   onClick={getLocation}
                   disabled={loading}
-                  className="bg-white text-purple-700 px-8 py-3 rounded-full font-semibold hover:bg-amber-400 hover:text-white transition-all duration-300 shadow-lg flex items-center gap-2"
+                  className="bg-white text-purple-700 px-8 py-3 rounded-full font-semibold hover:bg-amber-400 hover:text-white transition-all duration-300 shadow-lg flex items-center gap-2 disabled:opacity-70"
                 >
                   {loading ? (
                     <>
@@ -314,7 +309,7 @@ export function QiblaFinder() {
                 )}
 
                 {/* AR Overlay - 3D Kaaba */}
-                {cameraActive && qiblaAngle !== null && (
+                {hasLocation && qiblaAngle !== null && (
                   <div 
                     className="absolute inset-0 flex items-center justify-center pointer-events-none"
                     style={{ 
@@ -323,7 +318,6 @@ export function QiblaFinder() {
                     }}
                   >
                     <div className="relative">
-                      {/* Large Kaaba Icon */}
                       <div className={`relative transition-all duration-500 ${isFacingQibla() ? 'scale-125' : 'scale-100'}`}>
                         <KaabaIcon 
                           className={`w-40 h-40 drop-shadow-2xl transition-all duration-300 ${
@@ -336,7 +330,6 @@ export function QiblaFinder() {
                           }} 
                         />
                         
-                        {/* Facing Qibla indicator */}
                         {isFacingQibla() && (
                           <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
                             <span className="bg-amber-500 text-white px-4 py-1 rounded-full text-sm font-bold animate-pulse">
@@ -346,7 +339,6 @@ export function QiblaFinder() {
                         )}
                       </div>
                       
-                      {/* Distance Label - counter-rotated to stay horizontal */}
                       <div 
                         className="absolute -bottom-16 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap"
                         style={{ transform: `rotate(${-getArrowRotation()}deg) translateX(-50%)` }}
@@ -364,7 +356,12 @@ export function QiblaFinder() {
                     <p className="text-amber-400 text-2xl font-bold">{qiblaAngle}°</p>
                   </div>
                   <button
-                    onClick={stopCamera}
+                    onClick={() => {
+                      stopCamera();
+                      setShowOnboarding(true);
+                      setHasLocation(false);
+                      setQiblaAngle(null);
+                    }}
                     className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/80 transition-colors"
                   >
                     <X className="w-5 h-5" />
@@ -389,7 +386,6 @@ export function QiblaFinder() {
                   </div>
                 </div>
 
-                {/* Instructions overlay */}
                 {!isFacingQibla() && (
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
                     <div className="text-white/30 text-sm font-medium bg-black/30 px-4 py-2 rounded-full backdrop-blur-sm">
@@ -402,7 +398,6 @@ export function QiblaFinder() {
           )}
         </div>
 
-        {/* Instructions */}
         {showOnboarding && (
           <div className="fade-up max-w-xl mx-auto mt-8" style={{ transitionDelay: '0.2s' }}>
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
