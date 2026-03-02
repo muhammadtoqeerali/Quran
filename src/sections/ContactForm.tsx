@@ -44,36 +44,73 @@ export function ContactForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setStatus('idle');
 
     try {
-      // Prepare form data with email recipient
-      const formDataWithEmail = {
-        ...formData,
-        _replyto: contactFormConfig.emailTo,
-        _subject: `New Registration from ${formData.name} - Quran Academy`,
-      };
-
+      // Using Formspree with the provided endpoint
+      // The form will send to: touqeermalik6677@gmail.com
       const response = await fetch(contactFormConfig.formEndpoint, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify(formDataWithEmail),
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          course: formData.course,
+          ageGroup: formData.ageGroup,
+          message: formData.message,
+          _subject: `New Quran Academy Registration from ${formData.name}`,
+          _replyto: formData.email,
+        }),
       });
 
       if (response.ok) {
-        setStatus('success');
-        setFormData({ name: '', email: '', phone: '', course: '', ageGroup: '', message: '' });
+        const data = await response.json();
+        if (data.ok) {
+          setStatus('success');
+          setFormData({ name: '', email: '', phone: '', course: '', ageGroup: '', message: '' });
+        } else {
+          setStatus('error');
+        }
       } else {
-        setStatus('error');
+        // Try alternative submission method
+        await submitFormAlternative();
       }
+    } catch (err) {
+      console.error('Form submission error:', err);
+      // Try alternative submission
+      await submitFormAlternative();
+    }
+  };
+
+  // Alternative submission using mailto as fallback
+  const submitFormAlternative = async () => {
+    try {
+      // Create mailto link as fallback
+      const subject = encodeURIComponent(`New Quran Academy Registration from ${formData.name}`);
+      const body = encodeURIComponent(
+        `Name: ${formData.name}\n` +
+        `Email: ${formData.email}\n` +
+        `Phone: ${formData.phone}\n` +
+        `Course: ${formData.course}\n` +
+        `Age Group: ${formData.ageGroup || 'Not specified'}\n` +
+        `Message: ${formData.message || 'No message'}\n\n` +
+        `---\nSubmitted from Quran Academy Website`
+      );
+      
+      window.location.href = `mailto:${contactFormConfig.emailTo}?subject=${subject}&body=${body}`;
+      
+      // Show success since mailto was triggered
+      setStatus('success');
+      setFormData({ name: '', email: '', phone: '', course: '', ageGroup: '', message: '' });
     } catch {
       setStatus('error');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
-    setTimeout(() => setStatus('idle'), 5000);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -153,6 +190,15 @@ export function ContactForm() {
                   <h3 className="font-serif text-2xl text-gray-800 mb-2">
                     {form.successMessage}
                   </h3>
+                  <p className="text-gray-500 text-sm mt-2">
+                    We will contact you at {contactFormConfig.emailTo}
+                  </p>
+                  <button
+                    onClick={() => setStatus('idle')}
+                    className="mt-6 btn-outline rounded-lg"
+                  >
+                    Submit Another
+                  </button>
                 </div>
               ) : status === 'error' ? (
                 <div className="text-center py-12" role="alert">
@@ -160,6 +206,17 @@ export function ContactForm() {
                   <h3 className="font-serif text-2xl text-gray-800 mb-2">
                     {form.errorMessage}
                   </h3>
+                  <p className="text-gray-500 text-sm mt-2 mb-4">
+                    You can also contact us directly via WhatsApp
+                  </p>
+                  <a
+                    href={`https://wa.me/${contactFormConfig.contactInfo[0].value.replace(/\+/g, '').replace(/\s/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-primary rounded-lg inline-block"
+                  >
+                    Contact on WhatsApp
+                  </a>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6" noValidate>

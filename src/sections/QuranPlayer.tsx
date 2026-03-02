@@ -18,17 +18,33 @@ interface Ayah {
   audio: string;
 }
 
+interface TranslationOption {
+  id: string;
+  name: string;
+  language: string;
+  hasAudio: boolean;
+}
+
+const translationOptions: TranslationOption[] = [
+  { id: "en.sahih", name: "English - Sahih International", language: "English", hasAudio: false },
+  { id: "ur.jalandhry", name: "Urdu - Jalandhry", language: "Urdu", hasAudio: false },
+  { id: "ur.ahmedali", name: "Urdu - Ahmed Ali", language: "Urdu", hasAudio: false },
+];
+
+
+
 export function QuranPlayer() {
   const [surahs, setSurahs] = useState<Surah[]>([]);
   const [selectedSurah, setSelectedSurah] = useState<number>(1);
   const [selectedReciter, setSelectedReciter] = useState<string>(quranPlayerConfig.reciters[0].id);
-  const [selectedTranslation] = useState<string>(quranPlayerConfig.translations[0]);
+  const [selectedTranslation, setSelectedTranslation] = useState<string>(translationOptions[0].id);
   const [ayahs, setAyahs] = useState<Ayah[]>([]);
   const [currentAyah, setCurrentAyah] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showTranslation, setShowTranslation] = useState(true);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  
+  const arabicAudioRef = useRef<HTMLAudioElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,7 +77,7 @@ export function QuranPlayer() {
       .catch(console.error);
   }, []);
 
-  // Fetch ayahs when surah changes
+  // Fetch ayahs when surah or reciter changes
   useEffect(() => {
     if (!selectedSurah) return;
     
@@ -71,34 +87,34 @@ export function QuranPlayer() {
     const arabicPromise = fetch(`${quranPlayerConfig.apiBaseUrl}/surah/${selectedSurah}/${selectedReciter}`)
       .then(res => res.json());
     
-    // Fetch translation
+    // Fetch written translation
     const translationPromise = fetch(`${quranPlayerConfig.apiBaseUrl}/surah/${selectedSurah}/${selectedTranslation}`)
       .then(res => res.json());
     
     Promise.all([arabicPromise, translationPromise])
       .then(([arabicData, translationData]) => {
-        if (arabicData.code === 200 && translationData.code === 200) {
+        if (arabicData.code === 200) {
           const combinedAyahs = arabicData.data.ayahs.map((ayah: any, index: number) => ({
             number: ayah.numberInSurah,
             text: ayah.text,
-            translation: translationData.data.ayahs[index]?.text,
+            translation: translationData.data?.ayahs[index]?.text,
             audio: ayah.audio,
           }));
           setAyahs(combinedAyahs);
-          setCurrentAyah(0);
-          setIsPlaying(false);
         }
+        setCurrentAyah(0);
+        setIsPlaying(false);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [selectedSurah, selectedReciter, selectedTranslation]);
 
   const handlePlay = () => {
-    if (audioRef.current) {
+    if (arabicAudioRef.current) {
       if (isPlaying) {
-        audioRef.current.pause();
+        arabicAudioRef.current.pause();
       } else {
-        audioRef.current.play();
+        arabicAudioRef.current.play();
       }
       setIsPlaying(!isPlaying);
     }
@@ -128,6 +144,9 @@ export function QuranPlayer() {
 
   const currentSurah = surahs.find(s => s.number === selectedSurah);
 
+  // Get current translation name
+  const currentTranslation = translationOptions.find(t => t.id === selectedTranslation);
+
   return (
     <section
       ref={sectionRef}
@@ -154,7 +173,7 @@ export function QuranPlayer() {
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto fade-up" style={{ transitionDelay: '0.1s' }}>
+        <div className="max-w-5xl mx-auto fade-up" style={{ transitionDelay: '0.1s' }}>
           {/* Controls Bar */}
           <div className="bg-emerald-900 rounded-t-2xl p-4 flex flex-wrap items-center justify-between gap-4">
             {/* Surah Selector */}
@@ -163,11 +182,11 @@ export function QuranPlayer() {
               <select
                 value={selectedSurah}
                 onChange={(e) => setSelectedSurah(Number(e.target.value))}
-                className="bg-emerald-800 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="bg-emerald-800 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-[200px]"
               >
                 {surahs.map((surah) => (
                   <option key={surah.number} value={surah.number}>
-                    {surah.number}. {surah.englishName} ({surah.name})
+                    {surah.number}. {surah.englishName}
                   </option>
                 ))}
               </select>
@@ -179,11 +198,27 @@ export function QuranPlayer() {
               <select
                 value={selectedReciter}
                 onChange={(e) => setSelectedReciter(e.target.value)}
-                className="bg-emerald-800 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="bg-emerald-800 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-[200px]"
               >
                 {quranPlayerConfig.reciters.map((reciter) => (
                   <option key={reciter.id} value={reciter.id}>
                     {reciter.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Translation Selector */}
+            <div className="flex items-center gap-2">
+              <Globe className="w-5 h-5 text-emerald-400" />
+              <select
+                value={selectedTranslation}
+                onChange={(e) => setSelectedTranslation(e.target.value)}
+                className="bg-emerald-800 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-[180px]"
+              >
+                {translationOptions.map((trans) => (
+                  <option key={trans.id} value={trans.id}>
+                    {trans.language}
                   </option>
                 ))}
               </select>
@@ -197,7 +232,7 @@ export function QuranPlayer() {
               }`}
             >
               <Globe className="w-4 h-4" />
-              Translation
+              Text
             </button>
           </div>
 
@@ -206,7 +241,7 @@ export function QuranPlayer() {
             {/* Surah Info */}
             {currentSurah && (
               <div className="bg-emerald-50 px-6 py-4 border-b border-emerald-100">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
                     <h3 className="font-serif text-2xl text-emerald-800">{currentSurah.name}</h3>
                     <p className="text-emerald-600 text-sm">
@@ -216,13 +251,18 @@ export function QuranPlayer() {
                   <div className="text-right">
                     <p className="text-emerald-600 text-sm">{currentSurah.numberOfAyahs} Verses</p>
                     <p className="text-emerald-500 text-xs">{currentSurah.revelationType}</p>
+                    {showTranslation && currentTranslation && (
+                      <p className="text-amber-600 text-xs mt-1">
+                        Translation: {currentTranslation.name}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
             )}
 
             {/* Ayah Display */}
-            <div className="p-6 min-h-[300px] max-h-[400px] overflow-y-auto">
+            <div className="p-6 min-h-[300px] max-h-[450px] overflow-y-auto">
               {loading ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
@@ -232,10 +272,10 @@ export function QuranPlayer() {
                   {ayahs.map((ayah, index) => (
                     <div
                       key={ayah.number}
-                      className={`p-4 rounded-xl transition-all ${
+                      className={`p-4 rounded-xl transition-all cursor-pointer ${
                         index === currentAyah
                           ? 'bg-emerald-50 border-2 border-emerald-200'
-                          : 'bg-gray-50 border border-gray-100'
+                          : 'bg-gray-50 border border-gray-100 hover:bg-emerald-50/50'
                       }`}
                       onClick={() => {
                         setCurrentAyah(index);
@@ -243,17 +283,26 @@ export function QuranPlayer() {
                       }}
                     >
                       <div className="flex items-start gap-4">
-                        <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 ${
+                          index === currentAyah ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-600'
+                        }`}>
                           {ayah.number}
                         </span>
                         <div className="flex-1">
-                          <p className="font-arabic text-2xl text-right text-gray-800 leading-relaxed mb-2">
+                          <p className="font-arabic text-2xl text-right text-gray-800 leading-relaxed mb-3">
                             {ayah.text}
                           </p>
                           {showTranslation && ayah.translation && (
-                            <p className="text-gray-600 text-sm leading-relaxed">
-                              {ayah.translation}
-                            </p>
+                            <div className="border-t border-gray-200 pt-3 mt-3">
+                              <p className={`text-sm leading-relaxed ${
+                                currentTranslation?.language === 'Urdu' ? 'font-arabic text-right' : ''
+                              }`} style={{ direction: currentTranslation?.language === 'Urdu' ? 'rtl' : 'ltr' }}>
+                                <span className="text-amber-600 font-medium">
+                                  {currentTranslation?.language === 'English' ? 'Translation: ' : 'ترجمہ: '}
+                                </span>
+                                <span className="text-gray-600">{ayah.translation}</span>
+                              </p>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -314,10 +363,10 @@ export function QuranPlayer() {
                   </button>
                 </div>
 
-                {/* Hidden Audio Element */}
+                {/* Hidden Audio Elements */}
                 {ayahs[currentAyah]?.audio && (
                   <audio
-                    ref={audioRef}
+                    ref={arabicAudioRef}
                     src={ayahs[currentAyah].audio}
                     onEnded={handleAyahEnd}
                     onPlay={() => setIsPlaying(true)}
@@ -332,6 +381,9 @@ export function QuranPlayer() {
           {/* Note */}
           <p className="text-center text-gray-500 text-sm mt-4">
             Audio powered by Al Quran Cloud API. Click on any ayah to play it.
+          </p>
+          <p className="text-center text-gray-400 text-xs mt-1">
+            English and Urdu translations available. Audio translations coming soon.
           </p>
         </div>
       </div>

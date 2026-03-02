@@ -28,7 +28,7 @@ export const siteConfig: SiteConfig = {
 // -----------------------------------------------------------------------------
 export interface CountryContact {
   country: string;
-  flag: string;
+  flagImage: string;
   code: string;
   whatsapp: string;
 }
@@ -48,19 +48,19 @@ export const topHeaderConfig: TopHeaderConfig = {
   countries: [
     {
       country: "Pakistan",
-      flag: "🇵🇰",
+      flagImage: "https://flagcdn.com/w40/pk.png",
       code: "+92",
       whatsapp: "+923428650577",
     },
     {
       country: "Italy",
-      flag: "🇮🇹",
+      flagImage: "https://flagcdn.com/w40/it.png",
       code: "+39",
       whatsapp: "+393756173106",
     },
     {
       country: "Dubai",
-      flag: "🇦🇪",
+      flagImage: "https://flagcdn.com/w40/ae.png",
       code: "+971",
       whatsapp: "+971581628306",
     },

@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Compass, MapPin, Navigation, RotateCw, Check } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Compass, MapPin, Navigation, RotateCw, Camera, AlertCircle } from 'lucide-react';
 import { qiblaFinderConfig } from '../config';
 
 // Calculate Qibla direction using the spherical law of cosines
@@ -25,7 +25,7 @@ function calculateQiblaDirection(lat: number, lng: number): number {
 function calculateDistance(lat: number, lng: number): number {
   const kaabaLat = qiblaFinderConfig.kaabaCoords.lat;
   const kaabaLng = qiblaFinderConfig.kaabaCoords.lng;
-  const R = 6371; // Earth's radius in km
+  const R = 6371;
   
   const latRad = (lat * Math.PI) / 180;
   const kaabaLatRad = (kaabaLat * Math.PI) / 180;
@@ -44,10 +44,14 @@ export function QiblaFinder() {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [qiblaAngle, setQiblaAngle] = useState<number | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
-  const [locationName, setLocationName] = useState<string>('');
+  const [deviceHeading, setDeviceHeading] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
-  const [manualCity, setManualCity] = useState('');
+  const [cameraActive, setCameraActive] = useState(false);
+  const [permissionDenied, setPermissionDenied] = useState(false);
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -68,6 +72,71 @@ export function QiblaFinder() {
     return () => observer.disconnect();
   }, []);
 
+  // Get device orientation for compass
+  useEffect(() => {
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      let heading = event.alpha || 0;
+      
+      // iOS webkitCompassHeading
+      if ((event as any).webkitCompassHeading) {
+        heading = (event as any).webkitCompassHeading;
+      }
+      
+      setDeviceHeading(heading);
+    };
+
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleOrientation, true);
+    }
+
+    return () => {
+      window.removeEventListener('deviceorientation', handleOrientation, true);
+    };
+  }, []);
+
+  // Stop camera when component unmounts
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
+  const startCamera = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false
+      });
+      
+      streamRef.current = stream;
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+      
+      setCameraActive(true);
+      setPermissionDenied(false);
+    } catch (err) {
+      console.error('Camera access denied:', err);
+      setPermissionDenied(true);
+      setCameraActive(false);
+    }
+  }, []);
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setCameraActive(false);
+  }, []);
+
   const getLocation = () => {
     setLoading(true);
     setError('');
@@ -84,64 +153,24 @@ export function QiblaFinder() {
         setLocation({ lat: latitude, lng: longitude });
         setQiblaAngle(calculateQiblaDirection(latitude, longitude));
         setDistance(calculateDistance(latitude, longitude));
-        setLocationName('Your Location');
         setLoading(false);
+        
+        // Auto-start camera after getting location
+        startCamera();
       },
       () => {
-        setError('Unable to retrieve your location. Please enter your city manually.');
+        setError('Unable to retrieve your location. Please enable location services.');
         setLoading(false);
-      }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
-  const searchCity = async () => {
-    if (!manualCity.trim()) return;
-    
-    setLoading(true);
-    setError('');
-    
-    try {
-      const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(manualCity)}&key=YOUR_API_KEY`);
-      const data = await response.json();
-      
-      if (data.results && data.results.length > 0) {
-        const result = data.results[0];
-        const { lat, lng } = result.geometry;
-        setLocation({ lat, lng });
-        setQiblaAngle(calculateQiblaDirection(lat, lng));
-        setDistance(calculateDistance(lat, lng));
-        setLocationName(result.formatted);
-      } else {
-        setError('City not found. Please try again.');
-      }
-    } catch {
-      // Fallback to demo mode if API fails
-      const demoLocations: Record<string, { lat: number; lng: number }> = {
-        'london': { lat: 51.5074, lng: -0.1278 },
-        'new york': { lat: 40.7128, lng: -74.0060 },
-        'dubai': { lat: 25.2048, lng: 55.2708 },
-        'karachi': { lat: 24.8607, lng: 67.0011 },
-        'rome': { lat: 41.9028, lng: 12.4964 },
-        'paris': { lat: 48.8566, lng: 2.3522 },
-        'istanbul': { lat: 41.0082, lng: 28.9784 },
-        'cairo': { lat: 30.0444, lng: 31.2357 },
-        'makkah': { lat: 21.3891, lng: 39.8579 },
-        'madinah': { lat: 24.5247, lng: 39.5692 },
-      };
-      
-      const cityLower = manualCity.toLowerCase();
-      if (demoLocations[cityLower]) {
-        const { lat, lng } = demoLocations[cityLower];
-        setLocation({ lat, lng });
-        setQiblaAngle(calculateQiblaDirection(lat, lng));
-        setDistance(calculateDistance(lat, lng));
-        setLocationName(manualCity);
-      } else {
-        setError('City not found. Try: London, New York, Dubai, Karachi, Rome, Paris, Istanbul, Cairo, Makkah, Madinah');
-      }
-    }
-    
-    setLoading(false);
+  // Calculate the rotation for the Qibla arrow overlay
+  const getArrowRotation = () => {
+    if (qiblaAngle === null) return 0;
+    // The arrow needs to point to Qibla relative to device heading
+    return (qiblaAngle - deviceHeading + 360) % 360;
   };
 
   return (
@@ -171,157 +200,156 @@ export function QiblaFinder() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 items-center max-w-5xl mx-auto">
-          {/* Compass Display */}
-          <div className="fade-up flex justify-center" style={{ transitionDelay: '0.1s' }}>
-            <div className="relative w-72 h-72 md:w-80 md:h-80">
-              {/* Outer ring */}
-              <div className="absolute inset-0 rounded-full border-8 border-emerald-100 bg-white shadow-xl" />
-              
-              {/* Degree markings */}
-              {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
-                <div
-                  key={deg}
-                  className="absolute w-full h-full"
-                  style={{ transform: `rotate(${deg}deg)` }}
-                >
-                  <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs font-bold text-gray-400">
-                    {deg === 0 ? 'N' : deg === 90 ? 'E' : deg === 180 ? 'S' : deg === 270 ? 'W' : deg}
-                  </div>
-                </div>
-              ))}
-              
-              {/* Inner circle */}
-              <div className="absolute inset-8 rounded-full border-2 border-emerald-50" />
-              
-              {/* Qibla Arrow */}
-              {qiblaAngle !== null && (
-                <div
-                  className="absolute inset-0 flex items-center justify-center transition-transform duration-1000"
-                  style={{ transform: `rotate(${qiblaAngle}deg)` }}
-                >
-                  <div className="relative w-full h-full">
-                    <div className="absolute top-4 left-1/2 -translate-x-1/2">
-                      <Navigation className="w-12 h-12 text-amber-500 fill-amber-500" />
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Center point */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-4 h-4 rounded-full bg-emerald-600" />
+        {/* AR Camera View */}
+        <div className="fade-up max-w-2xl mx-auto" style={{ transitionDelay: '0.1s' }}>
+          {!location ? (
+            // Initial State - Get Location
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 text-center">
+              <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
+                <Compass className="w-10 h-10 text-emerald-600" />
               </div>
-              
-              {/* Kaaba icon at center */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-emerald-600" />
-                </div>
-              </div>
-              
-              {/* Angle display */}
-              {qiblaAngle !== null && (
-                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-4 py-2 rounded-full text-sm font-semibold">
-                  {qiblaAngle}° from North
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Controls and Info */}
-          <div className="fade-up space-y-6" style={{ transitionDelay: '0.2s' }}>
-            {/* Location Input */}
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-              <h3 className="font-serif text-xl text-gray-800 mb-4 flex items-center gap-2">
-                <Compass className="w-5 h-5 text-emerald-600" />
-                Find Your Location
-              </h3>
-              
-              <div className="space-y-4">
-                <button
-                  onClick={getLocation}
-                  disabled={loading}
-                  className="w-full btn-primary rounded-lg flex items-center justify-center gap-2"
-                >
-                  {loading ? (
+              <h3 className="font-serif text-2xl text-gray-800 mb-3">Find Your Qibla Direction</h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Allow location access and camera permission to see the Qibla direction overlaid on your camera view.
+              </p>
+              <button
+                onClick={getLocation}
+                disabled={loading}
+                className="btn-primary rounded-lg flex items-center justify-center gap-2 mx-auto"
+              >
+                {loading ? (
+                  <>
                     <RotateCw className="w-5 h-5 animate-spin" />
-                  ) : (
+                    Getting Location...
+                  </>
+                ) : (
+                  <>
                     <MapPin className="w-5 h-5" />
-                  )}
-                  {loading ? 'Detecting...' : 'Use My Location'}
-                </button>
-                
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200" />
-                  </div>
-                  <div className="relative flex justify-center">
-                    <span className="bg-white px-2 text-sm text-gray-500">or</span>
-                  </div>
-                </div>
-                
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={manualCity}
-                    onChange={(e) => setManualCity(e.target.value)}
-                    placeholder="Enter city name (e.g., London, Dubai)"
-                    className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                    onKeyPress={(e) => e.key === 'Enter' && searchCity()}
-                  />
-                  <button
-                    onClick={searchCity}
-                    disabled={loading || !manualCity.trim()}
-                    className="px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
-                  >
-                    Search
-                  </button>
-                </div>
-              </div>
-              
+                    Find Qibla Direction
+                  </>
+                )}
+              </button>
               {error && (
-                <p className="mt-4 text-red-500 text-sm">{error}</p>
+                <div className="mt-4 p-4 bg-red-50 rounded-lg flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-red-600 text-sm">{error}</p>
+                </div>
               )}
             </div>
-
-            {/* Results */}
-            {location && qiblaAngle !== null && (
-              <div className="bg-emerald-50 rounded-xl p-6 border border-emerald-100">
-                <div className="flex items-center gap-2 mb-4">
-                  <Check className="w-5 h-5 text-emerald-600" />
-                  <span className="font-medium text-emerald-800">Location Found</span>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Location:</span>
-                    <span className="font-medium text-gray-800">{locationName}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Coordinates:</span>
-                    <span className="font-medium text-gray-800">
-                      {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Qibla Direction:</span>
-                    <span className="font-medium text-emerald-600">{qiblaAngle}°</span>
-                  </div>
-                  {distance !== null && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Distance to Kaaba:</span>
-                      <span className="font-medium text-gray-800">{distance.toLocaleString()} km</span>
+          ) : (
+            // AR Camera View
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-gray-900">
+              {/* Camera Feed */}
+              <div className="relative aspect-[3/4] bg-black">
+                {cameraActive ? (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : permissionDenied ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                    <div className="text-center p-6">
+                      <Camera className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                      <p className="text-gray-400 mb-4">Camera access denied</p>
+                      <button
+                        onClick={startCamera}
+                        className="btn-outline rounded-lg text-sm"
+                      >
+                        Try Again
+                      </button>
                     </div>
-                  )}
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                    <RotateCw className="w-10 h-10 text-gray-500 animate-spin" />
+                  </div>
+                )}
+
+                {/* AR Overlay - Qibla Arrow */}
+                {cameraActive && qiblaAngle !== null && (
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                    style={{ transform: `rotate(${getArrowRotation()}deg)` }}
+                  >
+                    <div className="relative">
+                      {/* Main Arrow */}
+                      <Navigation 
+                        className="w-32 h-32 text-amber-400 drop-shadow-lg" 
+                        style={{ 
+                          filter: 'drop-shadow(0 0 20px rgba(251, 191, 36, 0.6))',
+                        }} 
+                      />
+                      {/* Distance Label */}
+                      <div 
+                        className="absolute -bottom-16 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap"
+                        style={{ transform: `rotate(${-getArrowRotation()}deg) translateX(-50%)` }}
+                      >
+                        {distance?.toLocaleString()} km to Kaaba
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Info Overlay */}
+                <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+                  <div className="bg-black/60 backdrop-blur-sm rounded-lg px-4 py-2">
+                    <p className="text-white text-xs uppercase tracking-wider">Qibla Direction</p>
+                    <p className="text-amber-400 text-2xl font-bold">{qiblaAngle}°</p>
+                  </div>
+                  <div className="bg-black/60 backdrop-blur-sm rounded-lg px-4 py-2 text-right">
+                    <p className="text-white text-xs uppercase tracking-wider">Your Heading</p>
+                    <p className="text-emerald-400 text-2xl font-bold">{Math.round(deviceHeading)}°</p>
+                  </div>
+                </div>
+
+                {/* Instructions */}
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="bg-black/70 backdrop-blur-sm rounded-xl p-4">
+                    <p className="text-white text-sm text-center">
+                      <span className="text-amber-400 font-semibold">Point the arrow toward the Kaaba</span>
+                      <br />
+                      <span className="text-gray-300 text-xs">Turn your device until the yellow arrow points forward</span>
+                    </p>
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Instructions */}
+              {/* Controls */}
+              <div className="bg-gray-900 p-4 flex items-center justify-between">
+                <button
+                  onClick={() => {
+                    stopCamera();
+                    setLocation(null);
+                    setQiblaAngle(null);
+                  }}
+                  className="text-gray-400 hover:text-white text-sm flex items-center gap-2 transition-colors"
+                >
+                  <RotateCw className="w-4 h-4" />
+                  Reset
+                </button>
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${cameraActive ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span className="text-gray-400 text-xs">
+                    {cameraActive ? 'Camera Active' : 'Camera Off'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Instructions */}
+        {!location && (
+          <div className="fade-up max-w-xl mx-auto mt-8" style={{ transitionDelay: '0.2s' }}>
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h4 className="font-medium text-gray-800 mb-3">How to use:</h4>
-              <ol className="space-y-2">
+              <h4 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
+                <Compass className="w-5 h-5 text-emerald-600" />
+                How to use:
+              </h4>
+              <ol className="space-y-3">
                 {qiblaFinderConfig.instructions.map((instruction, index) => (
                   <li key={index} className="flex items-start gap-3 text-sm text-gray-600">
                     <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-semibold flex-shrink-0">
@@ -333,7 +361,7 @@ export function QiblaFinder() {
               </ol>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );
