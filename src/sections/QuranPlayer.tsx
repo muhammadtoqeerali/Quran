@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Play, Pause, SkipBack, SkipForward, BookOpen, Globe, Headphones } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Play, Pause, SkipBack, SkipForward, BookOpen, Globe, Headphones, Volume2 } from 'lucide-react';
 import { quranPlayerConfig } from '../config';
 
 interface Surah {
@@ -16,6 +16,7 @@ interface Ayah {
   text: string;
   translation?: string;
   audio: string;
+  translationAudio?: string;
 }
 
 interface TranslationOption {
@@ -23,15 +24,14 @@ interface TranslationOption {
   name: string;
   language: string;
   hasAudio: boolean;
+  audioIdentifier?: string;
 }
 
 const translationOptions: TranslationOption[] = [
-  { id: "en.sahih", name: "English - Sahih International", language: "English", hasAudio: false },
+  { id: "en.sahih", name: "English - Sahih International", language: "English", hasAudio: true, audioIdentifier: "en.walk" },
   { id: "ur.jalandhry", name: "Urdu - Jalandhry", language: "Urdu", hasAudio: false },
   { id: "ur.ahmedali", name: "Urdu - Ahmed Ali", language: "Urdu", hasAudio: false },
 ];
-
-
 
 export function QuranPlayer() {
   const [surahs, setSurahs] = useState<Surah[]>([]);
@@ -43,8 +43,11 @@ export function QuranPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showTranslation, setShowTranslation] = useState(true);
+  const [playTranslationAudio, setPlayTranslationAudio] = useState(true);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<'arabic' | 'translation'>('arabic');
   
   const arabicAudioRef = useRef<HTMLAudioElement>(null);
+  const translationAudioRef = useRef<HTMLAudioElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -77,11 +80,13 @@ export function QuranPlayer() {
       .catch(console.error);
   }, []);
 
-  // Fetch ayahs when surah or reciter changes
+  // Fetch ayahs when surah, reciter, or translation changes
   useEffect(() => {
     if (!selectedSurah) return;
     
     setLoading(true);
+    
+    const currentTranslation = translationOptions.find(t => t.id === selectedTranslation);
     
     // Fetch Arabic text with audio
     const arabicPromise = fetch(`${quranPlayerConfig.apiBaseUrl}/surah/${selectedSurah}/${selectedReciter}`)
@@ -91,30 +96,80 @@ export function QuranPlayer() {
     const translationPromise = fetch(`${quranPlayerConfig.apiBaseUrl}/surah/${selectedSurah}/${selectedTranslation}`)
       .then(res => res.json());
     
-    Promise.all([arabicPromise, translationPromise])
-      .then(([arabicData, translationData]) => {
+    // Fetch translation audio if available
+    const translationAudioPromise = currentTranslation?.hasAudio && currentTranslation.audioIdentifier
+      ? fetch(`${quranPlayerConfig.apiBaseUrl}/surah/${selectedSurah}/${currentTranslation.audioIdentifier}`)
+          .then(res => res.json())
+          .catch(() => ({ code: 404 }))
+      : Promise.resolve({ code: 404 });
+    
+    Promise.all([arabicPromise, translationPromise, translationAudioPromise])
+      .then(([arabicData, translationData, translationAudioData]) => {
         if (arabicData.code === 200) {
           const combinedAyahs = arabicData.data.ayahs.map((ayah: any, index: number) => ({
             number: ayah.numberInSurah,
             text: ayah.text,
             translation: translationData.data?.ayahs[index]?.text,
             audio: ayah.audio,
+            translationAudio: translationAudioData.code === 200 
+              ? translationAudioData.data?.ayahs[index]?.audio 
+              : undefined,
           }));
           setAyahs(combinedAyahs);
         }
         setCurrentAyah(0);
         setIsPlaying(false);
+        setCurrentlyPlaying('arabic');
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [selectedSurah, selectedReciter, selectedTranslation]);
 
+  // Handle Arabic audio ending - play translation next
+  const handleArabicEnd = useCallback(() => {
+    const currentAyahData = ayahs[currentAyah];
+    
+    if (playTranslationAudio && currentAyahData?.translationAudio && translationAudioRef.current) {
+      // Play translation audio
+      setCurrentlyPlaying('translation');
+      translationAudioRef.current.play();
+    } else {
+      // No translation audio, move to next ayah
+      handleAyahEnd();
+    }
+  }, [currentAyah, ayahs, playTranslationAudio]);
+
+  // Handle translation audio ending - move to next ayah
+  const handleTranslationEnd = useCallback(() => {
+    handleAyahEnd();
+  }, []);
+
+  // Move to next ayah
+  const handleAyahEnd = useCallback(() => {
+    if (currentAyah < ayahs.length - 1) {
+      setCurrentAyah(prev => prev + 1);
+      setCurrentlyPlaying('arabic');
+      // Arabic audio will auto-play due to src change
+    } else {
+      // End of surah
+      setIsPlaying(false);
+      setCurrentlyPlaying('arabic');
+    }
+  }, [currentAyah, ayahs.length]);
+
   const handlePlay = () => {
-    if (arabicAudioRef.current) {
+    if (currentlyPlaying === 'arabic' && arabicAudioRef.current) {
       if (isPlaying) {
         arabicAudioRef.current.pause();
       } else {
         arabicAudioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    } else if (currentlyPlaying === 'translation' && translationAudioRef.current) {
+      if (isPlaying) {
+        translationAudioRef.current.pause();
+      } else {
+        translationAudioRef.current.play();
       }
       setIsPlaying(!isPlaying);
     }
@@ -123,6 +178,7 @@ export function QuranPlayer() {
   const handleNext = () => {
     if (currentAyah < ayahs.length - 1) {
       setCurrentAyah(prev => prev + 1);
+      setCurrentlyPlaying('arabic');
       setIsPlaying(true);
     }
   };
@@ -130,22 +186,14 @@ export function QuranPlayer() {
   const handlePrev = () => {
     if (currentAyah > 0) {
       setCurrentAyah(prev => prev - 1);
+      setCurrentlyPlaying('arabic');
       setIsPlaying(true);
     }
   };
 
-  const handleAyahEnd = () => {
-    if (currentAyah < ayahs.length - 1) {
-      setCurrentAyah(prev => prev + 1);
-    } else {
-      setIsPlaying(false);
-    }
-  };
-
   const currentSurah = surahs.find(s => s.number === selectedSurah);
-
-  // Get current translation name
   const currentTranslation = translationOptions.find(t => t.id === selectedTranslation);
+  const currentAyahData = ayahs[currentAyah];
 
   return (
     <section
@@ -224,7 +272,21 @@ export function QuranPlayer() {
               </select>
             </div>
 
-            {/* Translation Toggle */}
+            {/* Translation Audio Toggle */}
+            {currentTranslation?.hasAudio && (
+              <button
+                onClick={() => setPlayTranslationAudio(!playTranslationAudio)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  playTranslationAudio ? 'bg-amber-500 text-white' : 'bg-emerald-800 text-emerald-300'
+                }`}
+                title="Play translation audio after Arabic"
+              >
+                <Volume2 className="w-4 h-4" />
+                Audio
+              </button>
+            )}
+
+            {/* Translation Text Toggle */}
             <button
               onClick={() => setShowTranslation(!showTranslation)}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
@@ -254,9 +316,28 @@ export function QuranPlayer() {
                     {showTranslation && currentTranslation && (
                       <p className="text-amber-600 text-xs mt-1">
                         Translation: {currentTranslation.name}
+                        {currentTranslation.hasAudio && playTranslationAudio && (
+                          <span className="text-emerald-600 ml-1">(with audio)</span>
+                        )}
                       </p>
                     )}
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Now Playing Indicator */}
+            {isPlaying && (
+              <div className="bg-amber-100 px-6 py-2 border-b border-amber-200">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="flex gap-1">
+                    <span className="w-1 h-4 bg-amber-500 rounded-full animate-pulse" />
+                    <span className="w-1 h-4 bg-amber-500 rounded-full animate-pulse delay-75" />
+                    <span className="w-1 h-4 bg-amber-500 rounded-full animate-pulse delay-150" />
+                  </div>
+                  <span className="text-amber-700 text-sm font-medium">
+                    Playing: {currentlyPlaying === 'arabic' ? 'Arabic' : 'Translation'}
+                  </span>
                 </div>
               </div>
             )}
@@ -279,6 +360,7 @@ export function QuranPlayer() {
                       }`}
                       onClick={() => {
                         setCurrentAyah(index);
+                        setCurrentlyPlaying('arabic');
                         setIsPlaying(true);
                       }}
                     >
@@ -364,14 +446,24 @@ export function QuranPlayer() {
                 </div>
 
                 {/* Hidden Audio Elements */}
-                {ayahs[currentAyah]?.audio && (
+                {currentAyahData?.audio && (
                   <audio
                     ref={arabicAudioRef}
-                    src={ayahs[currentAyah].audio}
-                    onEnded={handleAyahEnd}
+                    src={currentAyahData.audio}
+                    onEnded={handleArabicEnd}
                     onPlay={() => setIsPlaying(true)}
                     onPause={() => setIsPlaying(false)}
-                    autoPlay={isPlaying}
+                    autoPlay={isPlaying && currentlyPlaying === 'arabic'}
+                  />
+                )}
+                
+                {currentAyahData?.translationAudio && playTranslationAudio && (
+                  <audio
+                    ref={translationAudioRef}
+                    src={currentAyahData.translationAudio}
+                    onEnded={handleTranslationEnd}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
                   />
                 )}
               </div>
@@ -383,7 +475,7 @@ export function QuranPlayer() {
             Audio powered by Al Quran Cloud API. Click on any ayah to play it.
           </p>
           <p className="text-center text-gray-400 text-xs mt-1">
-            English and Urdu translations available. Audio translations coming soon.
+            English translation audio available. Urdu audio coming soon.
           </p>
         </div>
       </div>

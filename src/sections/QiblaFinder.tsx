@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Compass, MapPin, Navigation, RotateCw, Camera, AlertCircle } from 'lucide-react';
+import { Compass, RotateCw, Camera, AlertCircle, X, Info } from 'lucide-react';
 import { qiblaFinderConfig } from '../config';
 
 // Calculate Qibla direction using the spherical law of cosines
@@ -40,8 +40,25 @@ function calculateDistance(lat: number, lng: number): number {
   return Math.round(R * c);
 }
 
+// Kaaba SVG Component
+function KaabaIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} style={style} fill="currentColor">
+      {/* Kaaba base */}
+      <path d="M20 40 L50 30 L80 40 L80 75 L50 85 L20 75 Z" fill="#1a1a2e" />
+      {/* Kaaba top */}
+      <path d="M20 40 L50 30 L80 40 L50 50 Z" fill="#16213e" />
+      {/* Gold band */}
+      <path d="M20 55 L80 55 L80 60 L20 60 Z" fill="#d4af37" />
+      {/* Door */}
+      <path d="M42 55 L58 55 L58 75 L42 75 Z" fill="#0f0f1a" />
+      {/* Door frame */}
+      <path d="M40 55 L60 55 L60 77 L40 77 Z" fill="none" stroke="#d4af37" strokeWidth="2" />
+    </svg>
+  );
+}
+
 export function QiblaFinder() {
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [qiblaAngle, setQiblaAngle] = useState<number | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [deviceHeading, setDeviceHeading] = useState<number>(0);
@@ -49,6 +66,7 @@ export function QiblaFinder() {
   const [error, setError] = useState<string>('');
   const [cameraActive, setCameraActive] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(true);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -150,10 +168,10 @@ export function QiblaFinder() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        setLocation({ lat: latitude, lng: longitude });
         setQiblaAngle(calculateQiblaDirection(latitude, longitude));
         setDistance(calculateDistance(latitude, longitude));
         setLoading(false);
+        setShowOnboarding(false);
         
         // Auto-start camera after getting location
         startCamera();
@@ -166,11 +184,16 @@ export function QiblaFinder() {
     );
   };
 
-  // Calculate the rotation for the Qibla arrow overlay
+  // Calculate the rotation for the Qibla arrow
   const getArrowRotation = () => {
     if (qiblaAngle === null) return 0;
-    // The arrow needs to point to Qibla relative to device heading
     return (qiblaAngle - deviceHeading + 360) % 360;
+  };
+
+  // Check if facing Qibla (within 10 degrees)
+  const isFacingQibla = () => {
+    const rotation = getArrowRotation();
+    return rotation <= 10 || rotation >= 350;
   };
 
   return (
@@ -200,45 +223,67 @@ export function QiblaFinder() {
           </p>
         </div>
 
-        {/* AR Camera View */}
-        <div className="fade-up max-w-2xl mx-auto" style={{ transitionDelay: '0.1s' }}>
-          {!location ? (
-            // Initial State - Get Location
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 text-center">
-              <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
-                <Compass className="w-10 h-10 text-emerald-600" />
+        {/* Main Qibla Finder Container */}
+        <div className="fade-up max-w-md mx-auto" style={{ transitionDelay: '0.1s' }}>
+          {showOnboarding ? (
+            // Onboarding Screen - Google Qibla Finder Style
+            <div className="relative bg-gradient-to-b from-purple-600 via-purple-700 to-indigo-900 rounded-3xl overflow-hidden shadow-2xl">
+              {/* Islamic Pattern Background */}
+              <div className="absolute inset-0 opacity-10">
+                <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <pattern id="islamic-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <circle cx="10" cy="10" r="8" fill="none" stroke="white" strokeWidth="0.5"/>
+                    <path d="M10 2 L18 10 L10 18 L2 10 Z" fill="none" stroke="white" strokeWidth="0.5"/>
+                  </pattern>
+                  <rect width="100" height="100" fill="url(#islamic-pattern)"/>
+                </svg>
               </div>
-              <h3 className="font-serif text-2xl text-gray-800 mb-3">Find Your Qibla Direction</h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Allow location access and camera permission to see the Qibla direction overlaid on your camera view.
-              </p>
-              <button
-                onClick={getLocation}
-                disabled={loading}
-                className="btn-primary rounded-lg flex items-center justify-center gap-2 mx-auto"
-              >
-                {loading ? (
-                  <>
-                    <RotateCw className="w-5 h-5 animate-spin" />
-                    Getting Location...
-                  </>
-                ) : (
-                  <>
-                    <MapPin className="w-5 h-5" />
-                    Find Qibla Direction
-                  </>
-                )}
-              </button>
-              {error && (
-                <div className="mt-4 p-4 bg-red-50 rounded-lg flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-red-600 text-sm">{error}</p>
+              
+              {/* Content */}
+              <div className="relative z-10 p-8 text-center min-h-[500px] flex flex-col items-center justify-center">
+                {/* Kaaba Icon */}
+                <div className="mb-8 relative">
+                  <div className="w-32 h-32 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
+                    <KaabaIcon className="w-20 h-20 text-white" />
+                  </div>
+                  {/* Glow effect */}
+                  <div className="absolute inset-0 w-32 h-32 rounded-full bg-amber-400/30 blur-xl -z-10" />
                 </div>
-              )}
+                
+                <h3 className="font-serif text-3xl text-white mb-3">Qibla Finder</h3>
+                <p className="text-white/80 text-sm mb-8 max-w-xs">
+                  Locate the Qibla, wherever you are. Allow camera and location access for the best experience.
+                </p>
+                
+                <button
+                  onClick={getLocation}
+                  disabled={loading}
+                  className="bg-white text-purple-700 px-8 py-3 rounded-full font-semibold hover:bg-amber-400 hover:text-white transition-all duration-300 shadow-lg flex items-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <RotateCw className="w-5 h-5 animate-spin" />
+                      Getting Location...
+                    </>
+                  ) : (
+                    <>
+                      <Compass className="w-5 h-5" />
+                      Let's Go
+                    </>
+                  )}
+                </button>
+                
+                {error && (
+                  <div className="mt-6 p-4 bg-red-500/20 rounded-xl flex items-start gap-3 max-w-xs">
+                    <AlertCircle className="w-5 h-5 text-red-300 flex-shrink-0 mt-0.5" />
+                    <p className="text-red-200 text-sm">{error}</p>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
-            // AR Camera View
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-gray-900">
+            // AR Mode - Camera View with Qibla Overlay
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-gray-900">
               {/* Camera Feed */}
               <div className="relative aspect-[3/4] bg-black">
                 {cameraActive ? (
@@ -250,41 +295,60 @@ export function QiblaFinder() {
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                 ) : permissionDenied ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-purple-600 to-indigo-900">
                     <div className="text-center p-6">
-                      <Camera className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                      <p className="text-gray-400 mb-4">Camera access denied</p>
+                      <Camera className="w-16 h-16 text-white/50 mx-auto mb-4" />
+                      <p className="text-white mb-4">Camera access denied</p>
                       <button
                         onClick={startCamera}
-                        className="btn-outline rounded-lg text-sm"
+                        className="bg-white/20 text-white px-6 py-2 rounded-full hover:bg-white/30 transition-colors"
                       >
                         Try Again
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                    <RotateCw className="w-10 h-10 text-gray-500 animate-spin" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-purple-600 to-indigo-900">
+                    <RotateCw className="w-10 h-10 text-white/50 animate-spin" />
                   </div>
                 )}
 
-                {/* AR Overlay - Qibla Arrow */}
+                {/* AR Overlay - 3D Kaaba */}
                 {cameraActive && qiblaAngle !== null && (
                   <div 
                     className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                    style={{ transform: `rotate(${getArrowRotation()}deg)` }}
+                    style={{ 
+                      transform: `rotate(${getArrowRotation()}deg)`,
+                      transition: 'transform 0.3s ease-out'
+                    }}
                   >
                     <div className="relative">
-                      {/* Main Arrow */}
-                      <Navigation 
-                        className="w-32 h-32 text-amber-400 drop-shadow-lg" 
-                        style={{ 
-                          filter: 'drop-shadow(0 0 20px rgba(251, 191, 36, 0.6))',
-                        }} 
-                      />
-                      {/* Distance Label */}
+                      {/* Large Kaaba Icon */}
+                      <div className={`relative transition-all duration-500 ${isFacingQibla() ? 'scale-125' : 'scale-100'}`}>
+                        <KaabaIcon 
+                          className={`w-40 h-40 drop-shadow-2xl transition-all duration-300 ${
+                            isFacingQibla() ? 'text-amber-400' : 'text-white'
+                          }`}
+                          style={{ 
+                            filter: isFacingQibla() 
+                              ? 'drop-shadow(0 0 30px rgba(251, 191, 36, 0.8))' 
+                              : 'drop-shadow(0 0 20px rgba(255, 255, 255, 0.5))'
+                          }} 
+                        />
+                        
+                        {/* Facing Qibla indicator */}
+                        {isFacingQibla() && (
+                          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                            <span className="bg-amber-500 text-white px-4 py-1 rounded-full text-sm font-bold animate-pulse">
+                              Facing Qibla!
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Distance Label - counter-rotated to stay horizontal */}
                       <div 
-                        className="absolute -bottom-16 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap"
+                        className="absolute -bottom-16 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap"
                         style={{ transform: `rotate(${-getArrowRotation()}deg) translateX(-50%)` }}
                       >
                         {distance?.toLocaleString()} km to Kaaba
@@ -293,60 +357,57 @@ export function QiblaFinder() {
                   </div>
                 )}
 
-                {/* Info Overlay */}
+                {/* Top Info Bar */}
                 <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
-                  <div className="bg-black/60 backdrop-blur-sm rounded-lg px-4 py-2">
-                    <p className="text-white text-xs uppercase tracking-wider">Qibla Direction</p>
+                  <div className="bg-black/60 backdrop-blur-md rounded-xl px-4 py-2">
+                    <p className="text-white/60 text-[10px] uppercase tracking-wider">Qibla Direction</p>
                     <p className="text-amber-400 text-2xl font-bold">{qiblaAngle}°</p>
                   </div>
-                  <div className="bg-black/60 backdrop-blur-sm rounded-lg px-4 py-2 text-right">
-                    <p className="text-white text-xs uppercase tracking-wider">Your Heading</p>
-                    <p className="text-emerald-400 text-2xl font-bold">{Math.round(deviceHeading)}°</p>
-                  </div>
+                  <button
+                    onClick={stopCamera}
+                    className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
 
-                {/* Instructions */}
+                {/* Bottom Info Bar */}
                 <div className="absolute bottom-4 left-4 right-4">
-                  <div className="bg-black/70 backdrop-blur-sm rounded-xl p-4">
-                    <p className="text-white text-sm text-center">
-                      <span className="text-amber-400 font-semibold">Point the arrow toward the Kaaba</span>
-                      <br />
-                      <span className="text-gray-300 text-xs">Turn your device until the yellow arrow points forward</span>
-                    </p>
+                  <div className="bg-black/70 backdrop-blur-md rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white/60 text-xs">Your Heading</p>
+                        <p className="text-emerald-400 text-xl font-bold">{Math.round(deviceHeading)}°</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-white/60 text-xs">Accuracy</p>
+                        <p className={`text-sm font-medium ${isFacingQibla() ? 'text-amber-400' : 'text-white'}`}>
+                          {isFacingQibla() ? 'Perfect!' : `${Math.round(getArrowRotation())}° off`}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Controls */}
-              <div className="bg-gray-900 p-4 flex items-center justify-between">
-                <button
-                  onClick={() => {
-                    stopCamera();
-                    setLocation(null);
-                    setQiblaAngle(null);
-                  }}
-                  className="text-gray-400 hover:text-white text-sm flex items-center gap-2 transition-colors"
-                >
-                  <RotateCw className="w-4 h-4" />
-                  Reset
-                </button>
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${cameraActive ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <span className="text-gray-400 text-xs">
-                    {cameraActive ? 'Camera Active' : 'Camera Off'}
-                  </span>
-                </div>
+                {/* Instructions overlay */}
+                {!isFacingQibla() && (
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                    <div className="text-white/30 text-sm font-medium bg-black/30 px-4 py-2 rounded-full backdrop-blur-sm">
+                      Turn to face the Kaaba
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
         </div>
 
         {/* Instructions */}
-        {!location && (
+        {showOnboarding && (
           <div className="fade-up max-w-xl mx-auto mt-8" style={{ transitionDelay: '0.2s' }}>
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <h4 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
-                <Compass className="w-5 h-5 text-emerald-600" />
+                <Info className="w-5 h-5 text-emerald-600" />
                 How to use:
               </h4>
               <ol className="space-y-3">
