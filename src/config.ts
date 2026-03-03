@@ -936,7 +936,7 @@ export const contactFormConfig: ContactFormConfig = {
     {
       icon: "Mail",
       label: "Email",
-      value: "touqeermalik6677@gmail.com",
+      value: "onlinequranteam0@gmail.com",
       subtext: "We reply within 24 hours",
     },
     {
@@ -980,7 +980,7 @@ export const contactFormConfig: ContactFormConfig = {
   },
   privacyNotice: "By submitting this form, you agree to our privacy policy. Your information is secure and will never be shared with third parties.",
   formEndpoint: "https://formspree.io/f/xnqevjgw",
-  emailTo: "touqeermalik6677@gmail.com",
+  emailTo: "onlinequranteam0@gmail.com",
 };
 
 // -----------------------------------------------------------------------------
