@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, CheckCircle, AlertCircle, MapPin, Phone, Mail, Clock } from 'lucide-react';
+import { Send, CheckCircle, AlertCircle, MapPin, Phone, Mail, Clock, MessageCircle } from 'lucide-react';
 import { contactFormConfig } from '../config';
 
 // Icon lookup map for dynamic icon resolution from config strings
@@ -21,6 +21,7 @@ export function ContactForm() {
   });
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,9 +46,10 @@ export function ContactForm() {
     e.preventDefault();
     setIsSubmitting(true);
     setStatus('idle');
+    setErrorMessage('');
 
     try {
-      // Try Formspree first
+      // Use Formspree to send the email
       const response = await fetch(contactFormConfig.formEndpoint, {
         method: 'POST',
         headers: { 
@@ -66,47 +68,46 @@ export function ContactForm() {
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.ok) {
-          setStatus('success');
-          setFormData({ name: '', email: '', phone: '', course: '', ageGroup: '', message: '' });
-          setIsSubmitting(false);
-          return;
-        }
+      const data = await response.json();
+
+      if (response.ok && data.ok) {
+        // Success - form was submitted
+        setStatus('success');
+        setFormData({ name: '', email: '', phone: '', course: '', ageGroup: '', message: '' });
+      } else {
+        // Formspree returned an error
+        throw new Error(data.error || 'Form submission failed');
       }
-      
-      // If Formspree fails, fallback to mailto
-      fallbackToMailto();
     } catch (err) {
       console.error('Form submission error:', err);
-      // Fallback to mailto
-      fallbackToMailto();
+      setStatus('error');
+      setErrorMessage('Unable to submit form. Please try again or contact us directly via WhatsApp.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Fallback to mailto - opens Gmail with pre-filled message
-  const fallbackToMailto = () => {
-    const subject = encodeURIComponent(`New Quran Academy Registration from ${formData.name}`);
-    const body = encodeURIComponent(
-      `Assalamu Alaikum,\n\n` +
-      `A new registration has been submitted:\n\n` +
-      `Name: ${formData.name}\n` +
-      `Email: ${formData.email}\n` +
-      `Phone/WhatsApp: ${formData.phone}\n` +
-      `Course: ${formData.course}\n` +
-      `Age Group: ${formData.ageGroup || 'Not specified'}\n` +
-      `Message: ${formData.message || 'No additional message'}\n\n` +
-      `---\nSubmitted from Quran Academy Website\nDate: ${new Date().toLocaleString()}`
+  // Direct WhatsApp message function - works reliably on all devices
+  const sendViaWhatsApp = () => {
+    const phoneNumber = contactFormConfig.contactInfo.find(info => info.icon === 'Phone')?.value.replace(/\+/g, '').replace(/\s/g, '') || '393756173106';
+    
+    const message = encodeURIComponent(
+      `*New Quran Academy Registration*\n\n` +
+      `*Name:* ${formData.name}\n` +
+      `*Email:* ${formData.email}\n` +
+      `*Phone:* ${formData.phone}\n` +
+      `*Course:* ${formData.course}\n` +
+      `*Age Group:* ${formData.ageGroup || 'Not specified'}\n` +
+      `*Message:* ${formData.message || 'No additional message'}\n\n` +
+      `_Submitted from Quran Academy Website_`
     );
     
-    // Open mailto link
-    window.open(`mailto:${contactFormConfig.emailTo}?subject=${subject}&body=${body}`, '_blank');
+    // Open WhatsApp with pre-filled message
+    window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
     
     // Show success message
     setStatus('success');
     setFormData({ name: '', email: '', phone: '', course: '', ageGroup: '', message: '' });
-    setIsSubmitting(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -174,6 +175,26 @@ export function ContactForm() {
                   );
                 })}
               </div>
+
+              {/* WhatsApp Quick Contact */}
+              <div className="mt-8 p-6 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl text-white">
+                <div className="flex items-center gap-3 mb-3">
+                  <MessageCircle className="w-6 h-6" />
+                  <h4 className="font-semibold text-lg">Prefer WhatsApp?</h4>
+                </div>
+                <p className="text-emerald-100 text-sm mb-4">
+                  Message us directly on WhatsApp for quick responses!
+                </p>
+                <a
+                  href={`https://wa.me/${contactFormConfig.contactInfo.find(info => info.icon === 'Phone')?.value.replace(/\+/g, '').replace(/\s/g, '') || '393756173106'}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white text-emerald-600 rounded-lg font-medium hover:bg-emerald-50 transition-colors"
+                >
+                  <Phone className="w-4 h-4" />
+                  Chat on WhatsApp
+                </a>
+              </div>
             </div>
           </div>
 
@@ -182,42 +203,47 @@ export function ContactForm() {
             <div className="slide-in-right bg-white rounded-2xl border border-gray-100 shadow-lg shadow-gray-100 p-8" style={{ transitionDelay: '0.15s' }}>
               {status === 'success' ? (
                 <div className="text-center py-12" role="alert">
-                  <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-                  <h3 className="font-serif text-2xl text-gray-800 mb-2">
+                  <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle className="w-10 h-10 text-emerald-600" />
+                  </div>
+                  <h3 className="font-serif text-2xl text-gray-800 mb-3">
                     {form.successMessage}
                   </h3>
-                  <p className="text-gray-500 text-sm mt-2">
-                    Please send the email that opened in your mail app.
+                  <p className="text-gray-500 max-w-md mx-auto mb-6">
+                    Thank you for your registration. Our team will contact you within 24 hours to confirm your enrollment.
                   </p>
                   <button
                     onClick={() => setStatus('idle')}
-                    className="mt-6 btn-outline rounded-lg"
+                    className="btn-outline rounded-lg"
                   >
-                    Submit Another
+                    Submit Another Registration
                   </button>
                 </div>
               ) : status === 'error' ? (
                 <div className="text-center py-12" role="alert">
-                  <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                  <h3 className="font-serif text-2xl text-gray-800 mb-2">
+                  <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <AlertCircle className="w-10 h-10 text-red-600" />
+                  </div>
+                  <h3 className="font-serif text-2xl text-gray-800 mb-3">
                     {form.errorMessage}
                   </h3>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
+                  <p className="text-gray-500 max-w-md mx-auto mb-6">
+                    {errorMessage}
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <button
                       onClick={() => setStatus('idle')}
                       className="btn-outline rounded-lg"
                     >
                       Try Again
                     </button>
-                    <a
-                      href={`https://wa.me/${contactFormConfig.contactInfo[0].value.replace(/\+/g, '').replace(/\s/g, '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-primary rounded-lg inline-flex items-center justify-center gap-2"
+                    <button
+                      onClick={sendViaWhatsApp}
+                      className="btn-primary rounded-lg inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700"
                     >
-                      <Phone className="w-4 h-4" />
-                      Contact on WhatsApp
-                    </a>
+                      <MessageCircle className="w-4 h-4" />
+                      Send via WhatsApp
+                    </button>
                   </div>
                 </div>
               ) : (
@@ -333,28 +359,37 @@ export function ContactForm() {
                     />
                   </div>
 
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full btn-primary rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Opening Email...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4" />
-                        {form.submitText}
-                      </>
-                    )}
-                  </button>
+                  {/* Submit Buttons */}
+                  <div className="space-y-3">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full btn-primary rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          {form.submitText}
+                        </>
+                      )}
+                    </button>
 
-                  <p className="text-xs text-gray-400 text-center">
-                    Clicking submit will open your email app with a pre-filled message.
-                  </p>
+                    {/* Alternative: Send via WhatsApp */}
+                    <button
+                      type="button"
+                      onClick={sendViaWhatsApp}
+                      disabled={!formData.name || !formData.phone || !formData.course}
+                      className="w-full py-3 px-6 rounded-lg border-2 border-emerald-500 text-emerald-600 font-medium hover:bg-emerald-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Or Send via WhatsApp
+                    </button>
+                  </div>
 
                   {contactFormConfig.privacyNotice && (
                     <p className="text-xs text-gray-500 text-center">

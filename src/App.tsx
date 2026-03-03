@@ -7,7 +7,6 @@ import { WineShowcase } from './sections/WineShowcase';
 import { HowItWorks } from './sections/HowItWorks';
 import { WineryCarousel } from './sections/WineryCarousel';
 import { Pricing } from './sections/Pricing';
-import { QiblaFinder } from './sections/QiblaFinder';
 import { QuranPlayer } from './sections/QuranPlayer';
 import { Museum } from './sections/Museum';
 import { News } from './sections/News';
@@ -38,7 +37,6 @@ function App() {
           <HowItWorks />
           <WineryCarousel />
           <Pricing />
-          <QiblaFinder />
           <QuranPlayer />
           <Museum />
           <News />
