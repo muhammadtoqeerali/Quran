@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-/* Added MessageCircle to imports */
-import { Send, CheckCircle, AlertCircle, MapPin, Phone, Mail, Clock, MessageCircle } from 'lucide-react';
+import { Send, CheckCircle, AlertCircle, MapPin, Phone, Mail, Clock } from 'lucide-react';
 import { contactFormConfig } from '../config';
 
 // Icon lookup map for dynamic icon resolution from config strings
@@ -48,6 +47,7 @@ export function ContactForm() {
     setStatus('idle');
 
     try {
+      // Try Formspree first
       const response = await fetch(contactFormConfig.formEndpoint, {
         method: 'POST',
         headers: { 
@@ -76,13 +76,16 @@ export function ContactForm() {
         }
       }
       
+      // If Formspree fails, fallback to mailto
       fallbackToMailto();
     } catch (err) {
       console.error('Form submission error:', err);
+      // Fallback to mailto
       fallbackToMailto();
     }
   };
 
+  // Fallback to mailto - opens Gmail with pre-filled message
   const fallbackToMailto = () => {
     const subject = encodeURIComponent(`New Quran Academy Registration from ${formData.name}`);
     const body = encodeURIComponent(
@@ -96,30 +99,14 @@ export function ContactForm() {
       `Message: ${formData.message || 'No additional message'}\n\n` +
       `---\nSubmitted from Quran Academy Website\nDate: ${new Date().toLocaleString()}`
     );
+    
+    // Open mailto link
     window.open(`mailto:${contactFormConfig.emailTo}?subject=${subject}&body=${body}`, '_blank');
+    
+    // Show success message
     setStatus('success');
     setFormData({ name: '', email: '', phone: '', course: '', ageGroup: '', message: '' });
     setIsSubmitting(false);
-  };
-
-  /* NEW: WhatsApp redirect logic */
-  const sendViaWhatsApp = () => {
-    const phoneNumber = contactFormConfig.contactInfo.find(info => info.icon === 'Phone')?.value.replace(/\+/g, '').replace(/\s/g, '') || '';
-    
-    const message = encodeURIComponent(
-      `*New Quran Academy Registration*\n\n` +
-      `*Name:* ${formData.name}\n` +
-      `*Email:* ${formData.email}\n` +
-      `*Phone:* ${formData.phone}\n` +
-      `*Course:* ${formData.course}\n` +
-      `*Age Group:* ${formData.ageGroup || 'Not specified'}\n` +
-      `*Message:* ${formData.message || 'No additional message'}\n\n` +
-      `_Submitted from Quran Academy Website_`
-    );
-    
-    window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
-    setStatus('success');
-    setFormData({ name: '', email: '', phone: '', course: '', ageGroup: '', message: '' });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -132,30 +119,49 @@ export function ContactForm() {
   const form = contactFormConfig.form;
 
   return (
-    <section id="contact" ref={sectionRef} className="section-padding relative overflow-hidden bg-gradient-to-b from-white to-emerald-50/30">
+    <section
+      id="contact"
+      ref={sectionRef}
+      className="section-padding relative overflow-hidden bg-gradient-to-b from-white to-emerald-50/30"
+    >
+      {/* Background Pattern */}
       <div className="absolute inset-0 opacity-[0.03]">
         <div className="absolute inset-0 islamic-pattern" />
       </div>
 
       <div className="container-custom relative">
+        {/* Section Header */}
         <div className="fade-up text-center mb-16">
           <span className="font-script text-3xl text-amber-500 block mb-2">{contactFormConfig.scriptText}</span>
-          <span className="text-emerald-600 text-sm uppercase tracking-[0.2em] font-semibold mb-4 block">{contactFormConfig.subtitle}</span>
-          <h2 className="font-serif text-4xl md:text-5xl text-gray-800 mb-4">{contactFormConfig.mainTitle}</h2>
-          {contactFormConfig.introText && <p className="text-gray-600 max-w-2xl mx-auto">{contactFormConfig.introText}</p>}
+          <span className="text-emerald-600 text-sm uppercase tracking-[0.2em] font-semibold mb-4 block">
+            {contactFormConfig.subtitle}
+          </span>
+          <h2 className="font-serif text-4xl md:text-5xl text-gray-800 mb-4">
+            {contactFormConfig.mainTitle}
+          </h2>
+          {contactFormConfig.introText && (
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              {contactFormConfig.introText}
+            </p>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-5 gap-12 lg:gap-16">
+          {/* Contact Info */}
           <div className="lg:col-span-2 space-y-6">
             <div className="slide-in-left" style={{ transitionDelay: '0.1s' }}>
               {contactFormConfig.contactInfoTitle && (
                 <h3 className="font-serif text-2xl text-gray-800 mb-6">{contactFormConfig.contactInfoTitle}</h3>
               )}
-              <div className="space-y-4">
+              <div className="space-y-4" role="list" aria-label="Contact information">
                 {contactFormConfig.contactInfo.map((item) => {
                   const IconComponent = iconMap[item.icon];
                   return (
-                    <div key={item.label} className="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all">
+                    <div
+                      key={item.label}
+                      className="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all"
+                      role="listitem"
+                    >
                       <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
                         {IconComponent && <IconComponent className="w-5 h-5 text-emerald-600" />}
                       </div>
@@ -168,97 +174,193 @@ export function ContactForm() {
                   );
                 })}
               </div>
-
-              {/* NEW: WhatsApp Quick Contact Card */}
-              <div className="mt-8 p-6 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl text-white shadow-lg shadow-emerald-200">
-                <div className="flex items-center gap-3 mb-3">
-                  <MessageCircle className="w-6 h-6" />
-                  <h4 className="font-semibold text-lg">Prefer WhatsApp?</h4>
-                </div>
-                <p className="text-emerald-100 text-sm mb-4">Message us directly on WhatsApp for quick responses!</p>
-                <a
-                  href={`https://wa.me/${contactFormConfig.contactInfo.find(info => info.icon === 'Phone')?.value.replace(/\+/g, '').replace(/\s/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-white text-emerald-600 rounded-lg font-medium hover:bg-emerald-50 transition-colors"
-                >
-                  <Phone className="w-4 h-4" />
-                  Chat on WhatsApp
-                </a>
-              </div>
             </div>
           </div>
 
+          {/* Form */}
           <div className="lg:col-span-3">
-            <div className="slide-in-right bg-white rounded-2xl border border-gray-100 shadow-lg shadow-gray-100 p-8">
+            <div className="slide-in-right bg-white rounded-2xl border border-gray-100 shadow-lg shadow-gray-100 p-8" style={{ transitionDelay: '0.15s' }}>
               {status === 'success' ? (
-                <div className="text-center py-12">
+                <div className="text-center py-12" role="alert">
                   <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-                  <h3 className="font-serif text-2xl text-gray-800 mb-2">{form.successMessage}</h3>
-                  <p className="text-gray-500 text-sm mt-2">Registration details have been sent successfully.</p>
-                  <button onClick={() => setStatus('idle')} className="mt-6 btn-outline rounded-lg">Submit Another</button>
+                  <h3 className="font-serif text-2xl text-gray-800 mb-2">
+                    {form.successMessage}
+                  </h3>
+                  <p className="text-gray-500 text-sm mt-2">
+                    Please send the email that opened in your mail app.
+                  </p>
+                  <button
+                    onClick={() => setStatus('idle')}
+                    className="mt-6 btn-outline rounded-lg"
+                  >
+                    Submit Another
+                  </button>
+                </div>
+              ) : status === 'error' ? (
+                <div className="text-center py-12" role="alert">
+                  <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                  <h3 className="font-serif text-2xl text-gray-800 mb-2">
+                    {form.errorMessage}
+                  </h3>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
+                    <button
+                      onClick={() => setStatus('idle')}
+                      className="btn-outline rounded-lg"
+                    >
+                      Try Again
+                    </button>
+                    <a
+                      href={`https://wa.me/${contactFormConfig.contactInfo[0].value.replace(/\+/g, '').replace(/\s/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-primary rounded-lg inline-flex items-center justify-center gap-2"
+                    >
+                      <Phone className="w-4 h-4" />
+                      Contact on WhatsApp
+                    </a>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                   <div className="grid md:grid-cols-2 gap-6">
-                    {/* Form Fields (Name, Phone, Email, Course) */}
+                    {/* Name */}
                     <div>
-                      <label className="block text-sm text-gray-700 font-medium mb-2">{form.nameLabel} <span className="text-emerald-600">*</span></label>
-                      <input type="text" name="name" value={formData.name} onChange={handleChange} required placeholder={form.namePlaceholder} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all" />
+                      <label htmlFor="contact-name" className="block text-sm text-gray-700 font-medium mb-2">
+                        {form.nameLabel} <span className="text-emerald-600">*</span>
+                      </label>
+                      <input
+                        id="contact-name"
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        required
+                        placeholder={form.namePlaceholder}
+                        autoComplete="name"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all"
+                      />
                     </div>
+
+                    {/* Phone */}
                     <div>
-                      <label className="block text-sm text-gray-700 font-medium mb-2">{form.phoneLabel} <span className="text-emerald-600">*</span></label>
-                      <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required placeholder={form.phonePlaceholder} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all" />
+                      <label htmlFor="contact-phone" className="block text-sm text-gray-700 font-medium mb-2">
+                        {form.phoneLabel} <span className="text-emerald-600">*</span>
+                      </label>
+                      <input
+                        id="contact-phone"
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        required
+                        placeholder={form.phonePlaceholder}
+                        autoComplete="tel"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all"
+                      />
                     </div>
+
+                    {/* Email */}
                     <div>
-                      <label className="block text-sm text-gray-700 font-medium mb-2">{form.emailLabel} <span className="text-emerald-600">*</span></label>
-                      <input type="email" name="email" value={formData.email} onChange={handleChange} required placeholder={form.emailPlaceholder} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all" />
+                      <label htmlFor="contact-email" className="block text-sm text-gray-700 font-medium mb-2">
+                        {form.emailLabel} <span className="text-emerald-600">*</span>
+                      </label>
+                      <input
+                        id="contact-email"
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                        placeholder={form.emailPlaceholder}
+                        autoComplete="email"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all"
+                      />
                     </div>
+
+                    {/* Course Selection */}
                     <div>
-                      <label className="block text-sm text-gray-700 font-medium mb-2">{form.courseLabel} <span className="text-emerald-600">*</span></label>
-                      <select name="course" value={formData.course} onChange={handleChange} required className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all">
+                      <label htmlFor="contact-course" className="block text-sm text-gray-700 font-medium mb-2">
+                        {form.courseLabel} <span className="text-emerald-600">*</span>
+                      </label>
+                      <select
+                        id="contact-course"
+                        name="course"
+                        value={formData.course}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all"
+                      >
                         <option value="">Select a course</option>
-                        {form.courseOptions.map((option) => (<option key={option} value={option}>{option}</option>))}
+                        {form.courseOptions.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
                       </select>
                     </div>
                   </div>
 
+                  {/* Age Group */}
                   <div>
-                    <label className="block text-sm text-gray-700 font-medium mb-2">{form.ageGroupLabel}</label>
-                    <select name="ageGroup" value={formData.ageGroup} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all">
+                    <label htmlFor="contact-age" className="block text-sm text-gray-700 font-medium mb-2">
+                      {form.ageGroupLabel}
+                    </label>
+                    <select
+                      id="contact-age"
+                      name="ageGroup"
+                      value={formData.ageGroup}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all"
+                    >
                       <option value="">Select age group</option>
-                      {form.ageGroupOptions.map((option) => (<option key={option} value={option}>{option}</option>))}
+                      {form.ageGroupOptions.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
                     </select>
                   </div>
 
+                  {/* Message */}
                   <div>
-                    <label className="block text-sm text-gray-700 font-medium mb-2">{form.messageLabel}</label>
-                    <textarea name="message" value={formData.message} onChange={handleChange} rows={4} placeholder={form.messagePlaceholder} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg resize-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all" />
+                    <label htmlFor="contact-message" className="block text-sm text-gray-700 font-medium mb-2">
+                      {form.messageLabel}
+                    </label>
+                    <textarea
+                      id="contact-message"
+                      name="message"
+                      value={formData.message}
+                      onChange={handleChange}
+                      rows={4}
+                      placeholder={form.messagePlaceholder}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all resize-none"
+                    />
                   </div>
 
-                  {/* Buttons Section */}
-                  <div className="space-y-3">
-                    <button type="submit" disabled={isSubmitting} className="w-full btn-primary rounded-lg flex items-center justify-center gap-2">
-                      {isSubmitting ? (
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full btn-primary rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      ) : (
-                        <><Send className="w-4 h-4" /> {form.submitText}</>
-                      )}
-                    </button>
+                        Opening Email...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        {form.submitText}
+                      </>
+                    )}
+                  </button>
 
-                    {/* NEW: Secondary WhatsApp Submit Button */}
-                    <button
-                      type="button"
-                      onClick={sendViaWhatsApp}
-                      disabled={!formData.name || !formData.phone || !formData.course}
-                      className="w-full py-3 px-6 rounded-lg border-2 border-emerald-500 text-emerald-600 font-medium hover:bg-emerald-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      Or Send via WhatsApp
-                    </button>
-                  </div>
+                  <p className="text-xs text-gray-400 text-center">
+                    Clicking submit will open your email app with a pre-filled message.
+                  </p>
 
-                  <p className="text-xs text-gray-400 text-center">Your privacy is important to us. Information is only used for enrollment.</p>
+                  {contactFormConfig.privacyNotice && (
+                    <p className="text-xs text-gray-500 text-center">
+                      {contactFormConfig.privacyNotice}
+                    </p>
+                  )}
                 </form>
               )}
             </div>
