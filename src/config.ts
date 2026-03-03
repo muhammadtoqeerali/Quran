@@ -979,7 +979,7 @@ export const contactFormConfig: ContactFormConfig = {
     errorMessage: "Something went wrong. Please try again or contact us directly via WhatsApp.",
   },
   privacyNotice: "By submitting this form, you agree to our privacy policy. Your information is secure and will never be shared with third parties.",
-  formEndpoint: "https://formspree.io/f/xnqevjgw",
+  formEndpoint: "https://formspree.io/f/meelbvwn",
   emailTo: "onlinequranteam0@gmail.com",
 };
 
