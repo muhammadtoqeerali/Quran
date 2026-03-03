@@ -1074,7 +1074,7 @@ export const footerConfig: FooterConfig = {
   newsletterButtonText: "Subscribe",
   newsletterSuccessText: "Thank you for subscribing!",
   newsletterErrorText: "Please try again.",
-  newsletterEndpoint: "https://formspree.io/f/YOUR_NEWSLETTER_ID",
+  newsletterEndpoint: "https://formspree.io/f/meelbvwn",
   copyrightText: "© 2026 Quran Academy. All Rights Reserved.",
   legalLinks: ["Privacy Policy", "Terms of Service", "Refund Policy"],
   icpText: "",
