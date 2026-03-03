@@ -50,7 +50,7 @@ export const topHeaderConfig: TopHeaderConfig = {
       country: "Pakistan",
       flagImage: "https://flagcdn.com/w40/pk.png",
       code: "+92",
-      whatsapp: "+923428650577",
+      whatsapp: "+923091747543",
     },
     {
       country: "Italy",
