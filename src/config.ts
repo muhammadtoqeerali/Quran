@@ -1066,7 +1066,7 @@ export const footerConfig: FooterConfig = {
   ],
   contactItems: [
     { icon: "Phone", text: "+39 375 617 3106" },
-    { icon: "Mail", text: "touqeermalik6677@gmail.com" },
+    { icon: "Mail", text: "onlinequranteam0@gmail.com" },
     { icon: "MapPin", text: "Online - Worldwide" },
   ],
   newsletterLabel: "Subscribe to our newsletter for Islamic tips and updates",
