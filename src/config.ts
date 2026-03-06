@@ -69,13 +69,13 @@ export const topHeaderConfig: TopHeaderConfig = {
     {
       name: "Instagram",
       icon: "Instagram",
-      url: "https://instagram.com/quranacademy",
+      url: "https://www.instagram.com/onlinequranacademy.it?igsh=c290cXEwbmU2bm5x&utm_source=qr",
     },
-    {
-      name: "YouTube",
-      icon: "Youtube",
-      url: "https://youtube.com/quranacademy",
-    },
+   //  {
+    //   name: "YouTube",
+    //   icon: "Youtube",
+   //    url: "https://youtube.com/quranacademy",
+  //   },
     {
       name: "Facebook",
       icon: "Facebook",
